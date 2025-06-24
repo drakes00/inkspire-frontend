@@ -1,0 +1,60 @@
+<div class="text"><p>INKSPIRE</p></div>
+
+@if (!pendingValidation) {
+    <div class="text"><textarea #prompt [(ngModel)]="text" id="prompt" name="prompt" rows="28" cols="85"
+                                placeholder="Type something here..."
+                                [spellcheck]="true" autocomplete="on" autocapitalize="sentences"></textarea></div>
+
+
+    <div class="fakeline"></div>
+
+    <div class="buttons">
+        <button type="submit" (click)="showModalAdd()">{{ addYesButton }}</button>
+        @if (isModalVisibleAdd) {
+            <app-modal [title]="title" (close)="hideModal()"
+                       (validate)="handleModalAddSubmit($event)"></app-modal>
+        }
+        <button type="submit" (click)="rephraseText()">{{ rephraseNoButton }}</button>
+        <button type="submit" (click)="showModalTranslation()">Translate</button>
+        @if (isModalVisibleTranslate) {
+            <app-modal [title]="title" (close)="hideModal()"
+                       (validate)="handleModalTranslationSubmit($event)"></app-modal>
+        }
+    </div>
+            <div class="fakeline"></div>
+
+    <div class="buttons">
+        <p>
+            load duration :
+            {{ loadduration }}
+        </p>
+        <p>
+            token per second :
+            {{ tokenpsecond }}
+        </p>
+        <p>
+            total duration :
+            {{ totalduration }}
+        </p>
+        <p>
+            Number of token :
+            {{ evalcount }}
+        </p>
+    </div>
+}
+@if (pendingValidation) {
+    <div class="text">
+    <textarea #prompt [spellcheck]="true" id="generated" autocomplete="on" autocapitalize="sentences" rows="28"
+              cols="85">{{ generatedText }}</textarea>
+    </div>
+
+    <div class="fakeline"></div>
+
+    <div class="buttons">
+        <button (click)="applyGeneratedText()">Yes</button>
+        <button (click)="rejectGeneratedText()">No</button>
+        <button type="submit" (click)="save()">...</button>
+    </div>
+
+}
+

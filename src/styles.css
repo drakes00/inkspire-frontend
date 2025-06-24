@@ -1,0 +1,25 @@
+/* You can add global styles to this file, and also import other style files */
+
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+/*
+.loading{
+    background-color: rgba(0, 0, 0, 0.3) !important;
+    filter: brightness(50%);
+}
+*/
+
+.loading {
+    position: fixed; /* Pour couvrir tout l'écran */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.3) !important;
+    filter: brightness(70%);
+    background: url('//upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Phi_fenomeni.gif/50px-Phi_fenomeni.gif')
+    top center no-repeat; /* Centrer le gif */
+    z-index: 9999; /* S'assurer qu'il est au-dessus des autres éléments */
+}
+

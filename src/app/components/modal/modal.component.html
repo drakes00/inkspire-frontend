@@ -1,0 +1,13 @@
+<div class="modal-overlay" (click)="closeModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <h4>{{ title }}</h4>
+      @if (showTextarea) {
+      <textarea type="text" rows="5" cols="40" [(ngModel)]="textValue"></textarea>
+          <br>
+      <br>  
+    }
+
+        <button (click)="validateModal()">{{ confirmText }}</button>
+        <button (click)="closeModal()">{{ cancelText }}</button>
+    </div>
+  </div>
