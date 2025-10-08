@@ -110,6 +110,18 @@ export class FilesManagerService {
 		);
 	}
 
+	public getDirContent(id: number, token: string): Observable<string> {
+		const url = `/api/dir/${id}`;
+		const headers = new HttpHeaders({
+			'Authorization': `Bearer ${token}`,
+			'Accept': 'application/json',
+		});
+
+		return this.http.get<any>(url, { headers }).pipe(
+			map(rawData => JSON.stringify(rawData))
+		);
+	}
+
 
 	public async getFileContent(id:number, token:string)
 	{

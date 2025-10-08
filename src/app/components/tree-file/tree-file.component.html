@@ -1,54 +1,57 @@
 <div class="file-system-container">
+  <div style="text-align: center;"><p>INKSPIRE</p></div>
   <mat-menu #fileMenu="matMenu">
-    <button mat-menu-item (click)="handleEditAction()" [disabled]="!selectedNode">
-      <mat-icon>edit</mat-icon>
-      <span>Edit name</span>
-    </button>
-    <button mat-menu-item (click)="handleRemoveAction()" [disabled]="!selectedNode">
-      <mat-icon>delete</mat-icon>
-      <span>Remove</span>
-    </button>
-    <button mat-menu-item (click)="handleAddAction()" [disabled]="selectedNode && !selectedNode.expandable">
-      <mat-icon>add</mat-icon>
-      <span>Add new item</span>
-    </button>
+  <!--   <button mat-menu-item (click)="handleEditAction()" [disabled]="!selectedNode"> -->
+  <!--     <mat-icon>edit</mat-icon> -->
+  <!--     <span>Edit name</span> -->
+  <!--   </button> -->
+  <!--   <button mat-menu-item (click)="handleRemoveAction()" [disabled]="!selectedNode"> -->
+  <!--     <mat-icon>delete</mat-icon> -->
+  <!--     <span>Remove</span> -->
+  <!--   </button> -->
+  <!--   <button mat-menu-item (click)="handleAddAction()" [disabled]="selectedNode && !selectedNode.expandable"> -->
+  <!--     <mat-icon>add</mat-icon> -->
+  <!--     <span>Add new item</span> -->
+  <!--   </button> -->
   </mat-menu>
 
-
-  @if (isModalVisible){
-    <app-modal-choice [title]="title" (close)="hideModal()" (validate)="handleModalValidate($event)"></app-modal-choice>
-  }
-   @if (isEditModalVisible){
-    <app-modal-edit [title]="title" [titleFile]="nameOfNode" [context]="contextOfDir" [showTextarea]="isDirectoryEditing" (close)="hideModal()" (validate)="handleModalValidate($event)"></app-modal-edit>
-  }
-  <div class="actions-bar">
-    <button 
-      mat-icon-button
-      [matMenuTriggerFor]="fileMenu">
-      <mat-icon>more_vert</mat-icon>
-    </button>
-  </div>
+  <!-- @if (isModalVisible){ -->
+  <!--   <app-modal-choice [title]="title" (close)="hideModal()" (validate)="handleModalValidate($event)"></app-modal-choice> -->
+  <!-- } -->
+  <!--  @if (isEditModalVisible){ -->
+  <!--   <app-modal-edit [title]="title" [titleFile]="nameOfNode" [context]="contextOfDir" [showTextarea]="isDirectoryEditing" (close)="hideModal()" (validate)="handleModalValidate($event)"></app-modal-edit> -->
+  <!-- } -->
+  <!-- <div class="actions-bar"> -->
+  <!--   <button -->
+  <!--     mat-icon-button -->
+  <!--     [matMenuTriggerFor]="fileMenu"> -->
+  <!--     <mat-icon>more_vert</mat-icon> -->
+  <!--   </button> -->
+  <!-- </div> -->
 
   <mat-tree [dataSource]="dataSource" [treeControl]="treeControl">
-    <!-- Directory template -->
-    <mat-tree-node *matTreeNodeDef="let node; when: hasChild" matTreeNodePadding 
-                  [class.selected-node]="isSelected(node)"
-                  (click)="selectNode(node)">
-      <button mat-icon-button matTreeNodeToggle [attr.aria-label]="'Toggle ' + node.name">
-        <mat-icon class="mat-icon-rtl-mirror">
-          {{treeControl.isExpanded(node) ? 'expand_more' : 'chevron_right'}}
+
+    <!-- Directory node -->
+    <mat-tree-node *matTreeNodeDef="let node; when: hasChild" matTreeNodePadding>
+        <button mat-icon-button matTreeNodeToggle [attr.aria-label]="'Toggle ' + node.name">
+        <mat-icon>
+            {{treeControl.isExpanded(node) ? 'expand_more' : 'chevron_right'}}
         </mat-icon>
-      </button>
-      <mat-icon>folder</mat-icon>
-      <span class="node-name">{{node.name}}</span>
+        </button>
+        <mat-icon>folder</mat-icon>
+        <span class="node-name" (click)="selectNode(node)">
+            {{node.name}}
+        </span>
     </mat-tree-node>
-    
-    <!-- File template -->
-    <mat-tree-node *matTreeNodeDef="let node" matTreeNodePadding
-                  [class.selected-node]="isSelected(node)"
-                  (click)="selectNode(node)">
-      <mat-icon class="file-icon">insert_drive_file</mat-icon>
-      <span class="node-name">{{node.name}}</span>
+
+    <!-- File node -->
+    <mat-tree-node *matTreeNodeDef="let node" matTreeNodePadding>
+        <button mat-icon-button disabled></button>
+        <mat-icon>insert_drive_file</mat-icon>
+        <span class="node-name" (click)="selectNode(node)">
+            {{node.name}}
+        </span>
     </mat-tree-node>
+
   </mat-tree>
 </div>

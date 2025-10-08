@@ -17,7 +17,6 @@ export class MainPageComponent implements OnInit {
   constructor(private fms : FilesManagerService, private router: Router ) {}
 
   ngOnInit(): void {
-    console.log(localStorage)
     if (!localStorage.getItem('token')) {
       this.router.navigateByUrl('/login');
     }
