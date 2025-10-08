@@ -11,7 +11,6 @@ import {OllamaService} from '../../services/ollama.service';
 
 @Component({
     selector: 'app-text-page',
-    standalone: true,
     imports: [MatFormFieldModule, MatInputModule, FormsModule, ReactiveFormsModule, ModalComponent],
     templateUrl: './text-component.component.html',
     styleUrl: './text-component.component.css'

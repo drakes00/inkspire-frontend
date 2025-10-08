@@ -6,11 +6,10 @@ import { RouterModule, Router } from '@angular/router';
 import { ConnectionService } from '../../services/connection.service';
 
 @Component({
-  selector: 'app-connection-page',
-  standalone: true,
-  imports: [ReactiveFormsModule, FormsModule, MatFormFieldModule, MatInputModule, RouterModule],
-  templateUrl: './connection-page.component.html',
-  styleUrl: './connection-page.component.css'
+    selector: 'app-connection-page',
+    imports: [ReactiveFormsModule, FormsModule, MatFormFieldModule, MatInputModule, RouterModule],
+    templateUrl: './connection-page.component.html',
+    styleUrl: './connection-page.component.css'
 })
 export class ConnectionPageComponent {
 

@@ -5,7 +5,6 @@
     background-color: #f5f5f5;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
-
 .actions-bar {
     padding: 8px 16px;
     display: flex;
@@ -13,36 +12,49 @@
     background-color: #f5f5f5;
     border-bottom: 1px solid #e0e0e0;
 }
-
-.mat-tree {
+/* MDC Tree Container */
+.mdc-tree {
     background-color: white;
     flex: 1;
     overflow-y: auto;
 }
-
-.mat-tree-node {
+/* Base styles for all nodes */
+.mdc-tree-node {
     cursor: pointer;
     min-height: 40px;
     transition: background-color 0.2s;
+    display: block;
 }
-
-.file-icon {
-    margin-left: 25px;
+/* MDC Tree Node Content */
+.mdc-tree-node-content {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 16px; /* Default padding for directories */
+    height: 40px;
 }
-
-.mat-tree-node:hover {
+/* Indent ONLY file nodes based on their aria-level */
+.file-node[aria-level="1"] .mdc-tree-node-content {
+    padding-left: 0px; /* Root-level files */
+}
+.file-node[aria-level="2"] .mdc-tree-node-content {
+    padding-left: 40px; /* Files inside a directory */
+}
+/* Hide the toggle button for files */
+.file-node button[disabled] {
+    visibility: hidden;
+    width: 24px;
+}
+/* Hover effect for MDC tree nodes */
+.mdc-tree-node:hover {
     background-color: #f0f0f0;
 }
-
+/* Selected node styling */
 .selected-node {
     background-color: #e3f2fd !important;
     border-left: 3px solid #2196f3;
 }
-
-.node-name {
-    margin-left: 8px;
-}
-
+/* Icon styling */
 mat-icon {
     color: #555;
 }

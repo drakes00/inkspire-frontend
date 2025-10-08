@@ -2,11 +2,10 @@ import { Component, EventEmitter, Output, Input  } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 @Component({
-  selector: 'app-modal-edit',
-  standalone: true,
-  imports: [FormsModule],
-  templateUrl: './modal-edit.component.html',
-  styleUrl: './modal-edit.component.css'
+    selector: 'app-modal-edit',
+    imports: [FormsModule],
+    templateUrl: './modal-edit.component.html',
+    styleUrl: './modal-edit.component.css'
 })
 export class ModalEditComponent {
 

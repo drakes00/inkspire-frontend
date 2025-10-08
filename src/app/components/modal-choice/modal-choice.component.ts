@@ -2,11 +2,10 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 @Component({
-  selector: 'app-modal-choice',
-  standalone: true,
-  imports: [FormsModule],
-  templateUrl: './modal-choice.component.html',
-  styleUrl: './modal-choice.component.css'
+    selector: 'app-modal-choice',
+    imports: [FormsModule],
+    templateUrl: './modal-choice.component.html',
+    styleUrl: './modal-choice.component.css'
 })
 export class ModalChoiceComponent {
     @Output() close = new EventEmitter<void>();

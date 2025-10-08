@@ -12,7 +12,7 @@ import {
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatMenuModule } from '@angular/material/menu';
-import { CommonModule } from '@angular/common';
+
 import { forkJoin, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 
@@ -37,19 +37,17 @@ interface FileSystemNode {
 
 @Component({
     selector: 'app-tree-file',
-    standalone: true,
     imports: [
-        CommonModule,
-        MatTreeModule,
-        MatButtonModule,
-        MatIconModule,
-        MatMenuModule,
-        ModalChoiceComponent,
-        ModalEditComponent,
-    ],
+    MatTreeModule,
+    MatButtonModule,
+    MatIconModule,
+    MatMenuModule,
+    ModalChoiceComponent,
+    ModalEditComponent
+],
     templateUrl: './tree-file.component.html',
     styleUrls: ['./tree-file.component.css'],
-    changeDetection: ChangeDetectionStrategy.OnPush,
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class TreeFileComponent {
     title = '';
