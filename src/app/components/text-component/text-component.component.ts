@@ -32,8 +32,6 @@ export class TextComponent implements OnInit, OnDestroy {
     contextMenuY: number = 0;
     isContextMenuVisible: boolean = false;
     currentFileID: number = 0;
-    ollamaService = new OllamaService();
-    fileService = new FilesManagerService();
     addYesButton = "Add";
     rephraseNoButton = "Rephrase";
     pendingValidation: boolean = false;
@@ -54,7 +52,7 @@ export class TextComponent implements OnInit, OnDestroy {
     private subscription: Subscription = new Subscription();
 
 
-    constructor(private shareFiles: SharedFilesService, private filesManager: FilesManagerService) {
+    constructor(private shareFiles: SharedFilesService, private filesManager: FilesManagerService, private ollamaService: OllamaService) {
     }
 
 
@@ -213,9 +211,8 @@ export class TextComponent implements OnInit, OnDestroy {
      * Function called to generate a response from Ollama application. It takes the id of the current file to retrieve the context of the parent document. 
      */
     async rephraseText() {
-        this.role = "rephrase";
         const tokenUser = localStorage.getItem('token');
-        let getContext = await this.fileService.getDirContext(this.currentFileID, tokenUser!);
+        let getContext = await this.filesManager.getDirContext(this.currentFileID, tokenUser!);
         let cont = JSON.parse(getContext);
         let context = cont.param.context;
 
@@ -272,7 +269,7 @@ export class TextComponent implements OnInit, OnDestroy {
         if (this.title === "Please specify the language to translate to") {
 
             const tokenUser = localStorage.getItem('token');
-            let getContext = await this.fileService.getDirContext(this.currentFileID, tokenUser!);
+            let getContext = await this.filesManager.getDirContext(this.currentFileID, tokenUser!);
             let context = JSON.parse(getContext);
             let result = null;
 
@@ -325,7 +322,7 @@ export class TextComponent implements OnInit, OnDestroy {
         if (this.title === "Please specify how we should add some text") {
 
             const tokenUser = localStorage.getItem('token');
-            let getContext = await this.fileService.getDirContext(this.currentFileID, tokenUser!);
+            let getContext = await this.filesManager.getDirContext(this.currentFileID, tokenUser!);
             let context = JSON.parse(getContext);
             let result = null;
 

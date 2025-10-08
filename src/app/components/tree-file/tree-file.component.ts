@@ -47,7 +47,6 @@ export class TreeFileComponent {
     contextOfDir = "";
     nameOfNode = "";
     selectedNode: ExampleFlatNode | null = null;
-    filesManagerService = new FilesManagerService();
     FILE_SYSTEM: FileSystemNode[] = []
 
     private _transformer = (node: FileSystemNode, level: number) => {
@@ -74,19 +73,23 @@ export class TreeFileComponent {
     dataSource = new MatTreeFlatDataSource(this.treeControl, this.treeFlattener);
 
 
-    async updateTree() {
-        this.showLoading()
+    updateTree() {
+        // this.showLoading()
         let token = localStorage.getItem("token");
         if (token) {
-            let response = await this.filesManagerService.getTree(token);
-            let jsonResponse = JSON.parse(response);
-            this.FILE_SYSTEM = jsonResponse.param;
-        }
-        this.dataSource.data = this.FILE_SYSTEM;
-        this.removeLoading()
+            this.filesManagerService.getTree(token).subscribe(response => {
+                let jsonResponse = JSON.parse(response);
+                this.FILE_SYSTEM = jsonResponse.param || [];
+                this.dataSource.data = this.FILE_SYSTEM;
+                // this.removeLoading();
+            });
+        } else {
+			this.dataSource.data = [];
+			// this.removeLoading();
+		}
     }
 
-    constructor(private shareFiles: SharedFilesService) {
+    constructor(private filesManagerService: FilesManagerService, private shareFiles: SharedFilesService) {
         this.updateTree();
     }
 
@@ -263,10 +266,9 @@ export class TreeFileComponent {
                     if (result && contextResult) {
                         await this.updateTree();
                     }
+                }
+                this.contextOfDir = "";
             }
-            this.contextOfDir = "";
         }
     }
-
-}
 }

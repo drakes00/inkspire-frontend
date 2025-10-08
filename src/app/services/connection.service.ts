@@ -9,7 +9,7 @@ export class ConnectionService {
 
   public async connectUser(username: string, password: string): Promise<boolean>
   {
-    const url = 'http://localhost:8000/auth';
+    const url = '/auth';
     const contentType = 'application/json';
     const body = JSON.stringify({ username: username, password: password });
 
@@ -44,7 +44,7 @@ export class ConnectionService {
     localStorage.removeItem('token');
 
     if (token) {
-      const url = 'http://localhost:8000/logout';
+      const url = '/logout';
       try {
         await fetch(url, {
           method: 'POST',
