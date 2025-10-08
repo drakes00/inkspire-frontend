@@ -31,7 +31,7 @@
 
 <mat-tree [dataSource]="dataSource" [treeControl]="treeControl" class="mdc-tree">
   <!-- Directory node (expandable) -->
-  <mat-nested-tree-node *matTreeNodeDef="let node; when: hasChild" class="mdc-tree-node">
+  <mat-tree-node *matTreeNodeDef="let node; when: hasChild" class="mdc-tree-node">
     <div class="mdc-tree-node-content">
       <button mat-icon-button matTreeNodeToggle [attr.aria-label]="'Toggle ' + node.name">
         <mat-icon>
@@ -47,10 +47,10 @@
     <div [class.example-tree-invisible]="!treeControl.isExpanded(node)">
       <ng-container matTreeNodeOutlet></ng-container>
     </div>
-  </mat-nested-tree-node>
+  </mat-tree-node>
 
   <!-- File node (leaf) -->
-  <mat-nested-tree-node *matTreeNodeDef="let node" class="mdc-tree-node file-node">
+  <mat-tree-node *matTreeNodeDef="let node" class="mdc-tree-node file-node">
     <div class="mdc-tree-node-content">
       <button mat-icon-button disabled style="visibility: hidden;"></button>
       <mat-icon>insert_drive_file</mat-icon>
@@ -58,6 +58,6 @@
         {{node.name}}
       </span>
     </div>
-  </mat-nested-tree-node>
+  </mat-tree-node>
 </mat-tree>
 </div>
