@@ -14,7 +14,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatMenuModule } from '@angular/material/menu';
 
 import { forkJoin, of } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
+import { catchError, map, switchMap } from 'rxjs/operators';
 
 import { ModalChoiceComponent } from '../modal-choice/modal-choice.component';
 import { ModalEditComponent } from '../modal-edit/modal-edit.component';
@@ -38,16 +38,16 @@ interface FileSystemNode {
 @Component({
     selector: 'app-tree-file',
     imports: [
-    MatTreeModule,
-    MatButtonModule,
-    MatIconModule,
-    MatMenuModule,
-    ModalChoiceComponent,
-    ModalEditComponent
-],
+        MatTreeModule,
+        MatButtonModule,
+        MatIconModule,
+        MatMenuModule,
+        ModalChoiceComponent,
+        ModalEditComponent,
+    ],
     templateUrl: './tree-file.component.html',
     styleUrls: ['./tree-file.component.css'],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TreeFileComponent {
     title = '';
@@ -104,90 +104,92 @@ export class TreeFileComponent {
             return;
         }
 
-        // Step 1: Get the list of root-level dirs + files
-        this.filesManagerService.getTree(token).subscribe((response) => {
-            const jsonResponse = JSON.parse(response);
-            const files = jsonResponse.files || {};
-            const dirs = jsonResponse.dirs || {};
+        this.filesManagerService
+            .getTree(token)
+            .pipe(
+                map((response) => {
+                    const jsonResponse = JSON.parse(response);
+                    const files = jsonResponse.files || {};
+                    const dirs = jsonResponse.dirs || {};
 
-            const rootNodes: FileSystemNode[] = [];
+                    const rootNodes: FileSystemNode[] = [];
+                    const dirRequests = Object.entries(dirs).map(
+                        ([dirId, dir]) => {
+                            const dirNode: FileSystemNode = {
+                                id: parseInt(dirId, 10),
+                                name: (dir as any).name,
+                                type: 'D',
+                                children: [],
+                            };
 
-            // Step 2: build directory placeholders
-            const dirRequests = Object.entries(dirs).map(([dirId, dir]) => {
-                const dirNode: FileSystemNode = {
-                    id: parseInt(dirId, 10),
-                    name: (dir as any).name,
-                    type: 'D',
-                    children: [],
-                };
+                            rootNodes.push(dirNode);
 
-                rootNodes.push(dirNode);
+                            return this.filesManagerService
+                                .getDirContent(dirNode.id, token)
+                                .pipe(
+                                    map((res) => {
+                                        const jsonRes = JSON.parse(res);
+                                        const files = jsonRes.files || {};
+                                        const children: FileSystemNode[] = [];
 
-                // Fetch contents of each directory
-                return this.filesManagerService
-                    .getDirContent(dirNode.id, token)
-                    .pipe(
-                        map((res) => {
-                            const jsonRes = JSON.parse(res);
-                            const files = jsonRes.files || {};
-                            const children: FileSystemNode[] = [];
-
-                            for (const fileId in files) {
-                                if (
-                                    Object.prototype.hasOwnProperty.call(
-                                        files,
-                                        fileId,
-                                    )
-                                ) {
-                                    const file = files[fileId];
-                                    children.push({
-                                        id: parseInt(fileId, 10),
-                                        name: file.name,
-                                        type: 'F',
-                                    });
-                                }
-                            }
-                            dirNode.children = children;
-                            return dirNode;
-                        }),
-                        catchError((err) => {
-                            console.error(
-                                'Error loading dir',
-                                dirNode.name,
-                                err,
-                            );
-                            return of(dirNode);
-                        }),
+                                        for (const fileId in files) {
+                                            if (
+                                                Object.prototype.hasOwnProperty.call(
+                                                    files,
+                                                    fileId,
+                                                )
+                                            ) {
+                                                const file = files[fileId];
+                                                children.push({
+                                                    id: parseInt(fileId, 10),
+                                                    name: file.name,
+                                                    type: 'F',
+                                                });
+                                            }
+                                        }
+                                        dirNode.children = children;
+                                        return dirNode;
+                                    }),
+                                    catchError((err) => {
+                                        console.error(
+                                            'Error loading dir',
+                                            dirNode.name,
+                                            err,
+                                        );
+                                        return of(dirNode);
+                                    }),
+                                );
+                        },
                     );
-            });
 
-            // Step 3: add loose files
-            for (const fileId in files) {
-                if (Object.prototype.hasOwnProperty.call(files, fileId)) {
-                    const file = files[fileId];
-                    rootNodes.push({
-                        id: parseInt(fileId, 10),
-                        name: file.name,
-                        type: 'F',
-                    });
-                }
-            }
+                    // Add loose files
+                    for (const fileId in files) {
+                        if (
+                            Object.prototype.hasOwnProperty.call(files, fileId)
+                        ) {
+                            const file = files[fileId];
+                            rootNodes.push({
+                                id: parseInt(fileId, 10),
+                                name: file.name,
+                                type: 'F',
+                            });
+                        }
+                    }
 
-            // Step 4: Wait for all directories to finish loading
-            if (dirRequests.length === 0) {
+                    return { rootNodes, dirRequests };
+                }),
+                switchMap(({ rootNodes, dirRequests }) => {
+                    const allRequests =
+                        dirRequests.length > 0 ? forkJoin(dirRequests) : of([]);
+                    return allRequests.pipe(map(() => rootNodes));
+                }),
+            )
+            .subscribe((rootNodes) => {
                 this.FILE_SYSTEM = rootNodes;
                 this.dataSource.data = this.FILE_SYSTEM;
                 this.removeLoading();
                 this.cdr.markForCheck();
-            } else {
-                forkJoin(dirRequests).subscribe(() => {
-                    this.FILE_SYSTEM = rootNodes;
-                    this.dataSource.data = this.FILE_SYSTEM;
-                    this.removeLoading();
-                    this.cdr.markForCheck();
-                });
-            }
-        });
+            });
     }
 
     /** --------------------  NODE SELECTION  ---------------------- **/
@@ -205,6 +207,7 @@ export class TreeFileComponent {
         if (!node.expandable) {
             this.shareFiles.setSelectedFile(node.id);
         }
+        this.cdr.markForCheck();
     }
 
     /** --------------------  UTILITIES  ---------------------- **/

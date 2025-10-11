@@ -31,7 +31,10 @@
 
 <mat-tree [dataSource]="dataSource" [treeControl]="treeControl" class="mdc-tree">
   <!-- Directory node (expandable) -->
-  <mat-tree-node *matTreeNodeDef="let node; when: hasChild" class="mdc-tree-node">
+  <mat-tree-node
+    *matTreeNodeDef="let node; when: hasChild"
+    class="mdc-tree-node"
+    [class.selected-node]="isSelected(node)">
     <div class="mdc-tree-node-content">
       <button mat-icon-button matTreeNodeToggle [attr.aria-label]="'Toggle ' + node.name">
         <mat-icon>
@@ -43,14 +46,16 @@
         {{node.name}}
       </span>
     </div>
-    <!-- Container for child nodes (files) -->
     <div [class.example-tree-invisible]="!treeControl.isExpanded(node)">
       <ng-container matTreeNodeOutlet></ng-container>
     </div>
   </mat-tree-node>
 
   <!-- File node (leaf) -->
-  <mat-tree-node *matTreeNodeDef="let node" class="mdc-tree-node file-node">
+  <mat-tree-node
+    *matTreeNodeDef="let node"
+    class="mdc-tree-node file-node"
+    [class.selected-node]="isSelected(node)">
     <div class="mdc-tree-node-content">
       <button mat-icon-button disabled style="visibility: hidden;"></button>
       <mat-icon>insert_drive_file</mat-icon>
