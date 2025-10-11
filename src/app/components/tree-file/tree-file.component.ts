@@ -21,6 +21,9 @@ import { ModalEditComponent } from '../modal-edit/modal-edit.component';
 import { FilesManagerService } from '../../services/files-manager.service';
 import { SharedFilesService } from '../../services/shared-files.service';
 
+/**
+ * Represents a flattened node used by the Material tree control.
+ */
 interface ExampleFlatNode {
     id: number;
     expandable: boolean;
@@ -28,13 +31,20 @@ interface ExampleFlatNode {
     level: number;
 }
 
+/**
+ * Represents a node in the file system tree.
+ */
 interface FileSystemNode {
     id: number;
     name: string;
-    type: 'D' | 'F';
+    type: 'D' | 'F'; // D for Directory, F for File
     children?: FileSystemNode[];
 }
 
+/**
+ * The TreeFileComponent is responsible for displaying a hierarchical file system view.
+ * It allows users to navigate through directories and select files.
+ */
 @Component({
     selector: 'app-tree-file',
     imports: [
@@ -50,27 +60,64 @@ interface FileSystemNode {
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TreeFileComponent {
+    /**
+     * The title for modals.
+     */
     title = '';
+    /**
+     * Flag to control the visibility of the choice modal.
+     */
     isModalVisible = false;
+    /**
+     * Flag to control the visibility of the edit modal.
+     */
     isEditModalVisible = false;
+    /**
+     * Flag to indicate if a directory is being edited.
+     */
     isDirectoryEditing = false;
+    /**
+     * The context of the directory being edited.
+     */
     contextOfDir = '';
+    /**
+     * The name of the node being edited.
+     */
     nameOfNode = '';
+    /**
+     * The currently selected node in the tree.
+     */
     selectedNode: ExampleFlatNode | null = null;
+    /**
+     * The root of the file system structure.
+     */
     FILE_SYSTEM: FileSystemNode[] = [];
 
-    private _transformer = (node: FileSystemNode, level: number) => ({
+    /**
+     * Transforms a `FileSystemNode` to a `ExampleFlatNode`.
+     * This is used by the tree flattener.
+     */
+    private _transformer = (
+        node: FileSystemNode,
+        level: number,
+    ): ExampleFlatNode => ({
         id: node.id,
         expandable: node.type === 'D',
         name: node.name,
         level,
     });
 
+    /**
+     * The tree control for the Material tree. It manages the expansion state of nodes.
+     */
     treeControl = new FlatTreeControl<ExampleFlatNode>(
         (node) => node.level,
         (node) => node.expandable,
     );
 
+    /**
+     * The tree flattener for the Material tree. It flattens the hierarchical tree structure.
+     */
     treeFlattener = new MatTreeFlattener(
         this._transformer,
         (node) => node.level,
@@ -78,11 +125,20 @@ export class TreeFileComponent {
         (node) => node.children,
     );
 
+    /**
+     * The data source for the Material tree.
+     */
     dataSource = new MatTreeFlatDataSource(
         this.treeControl,
         this.treeFlattener,
     );
 
+    /**
+     * Initializes the component, injects dependencies, and triggers the initial tree update.
+     * @param filesManagerService Service to manage file and directory data.
+     * @param shareFiles Service to share selected file information across components.
+     * @param cdr The change detector reference for manual change detection.
+     */
     constructor(
         private filesManagerService: FilesManagerService,
         private shareFiles: SharedFilesService,
@@ -91,10 +147,19 @@ export class TreeFileComponent {
         this.updateTree();
     }
 
-    hasChild = (_: number, node: ExampleFlatNode) => node.expandable;
+    /**
+     * Checks if a node has children. Used by the tree definition.
+     * @param _ The node's index in the flattened array.
+     * @param node The node to check.
+     * @returns True if the node is expandable (a directory).
+     */
+    hasChild = (_: number, node: ExampleFlatNode): boolean => node.expandable;
 
-    /** --------------------  TREE BUILDING  ---------------------- **/
-    updateTree() {
+    /**
+     * Fetches the file system structure from the server and updates the tree.
+     * It first retrieves the root directories and files, then fetches the content of each directory.
+     */
+    updateTree(): void {
         this.showLoading();
         const token = localStorage.getItem('token');
 
@@ -124,6 +189,7 @@ export class TreeFileComponent {
 
                             rootNodes.push(dirNode);
 
+                            // Request content for each directory
                             return this.filesManagerService
                                 .getDirContent(dirNode.id, token)
                                 .pipe(
@@ -152,17 +218,18 @@ export class TreeFileComponent {
                                     }),
                                     catchError((err) => {
                                         console.error(
-                                            'Error loading dir',
+                                            'Error loading directory content for:',
                                             dirNode.name,
                                             err,
                                         );
+                                        // Return the directory node even if content loading fails
                                         return of(dirNode);
                                     }),
                                 );
                         },
                     );
 
-                    // Add loose files
+                    // Add root-level files
                     for (const fileId in files) {
                         if (
                             Object.prototype.hasOwnProperty.call(files, fileId)
@@ -178,6 +245,7 @@ export class TreeFileComponent {
 
                     return { rootNodes, dirRequests };
                 }),
+                // Wait for all directory content requests to complete
                 switchMap(({ rootNodes, dirRequests }) => {
                     const allRequests =
                         dirRequests.length > 0 ? forkJoin(dirRequests) : of([]);
@@ -188,47 +256,66 @@ export class TreeFileComponent {
                 this.FILE_SYSTEM = rootNodes;
                 this.dataSource.data = this.FILE_SYSTEM;
                 this.removeLoading();
-                this.cdr.markForCheck();
+                this.cdr.markForCheck(); // Trigger change detection
             });
     }
 
-    /** --------------------  NODE SELECTION  ---------------------- **/
+    /**
+     * Generates a unique key for a node based on its type and ID.
+     * @param node The node to generate a key for.
+     * @returns A unique string key.
+     */
     private getNodeKey(node: ExampleFlatNode): string {
         return `${node.expandable ? 'D' : 'F'}-${node.id}`;
     }
 
+    /**
+     * Checks if a node is currently selected.
+     * @param node The node to check.
+     * @returns True if the node is the currently selected one.
+     */
     isSelected(node: ExampleFlatNode): boolean {
         if (!this.selectedNode) return false;
         return this.getNodeKey(this.selectedNode) === this.getNodeKey(node);
     }
 
+    /**
+     * Handles the selection of a node in the tree.
+     * If a directory is clicked, it toggles its expansion state.
+     * If a file is clicked, it marks it as selected and notifies the `SharedFilesService`.
+     * @param node The node that was clicked.
+     * @param event The mouse event, used to stop propagation.
+     */
     selectNode(node: ExampleFlatNode, event?: MouseEvent): void {
         if (event) {
             event.stopPropagation();
         }
 
-        // Si c'est un dossier, toggle l'expansion
         if (node.expandable) {
+            // If it's a directory, toggle its expansion.
             this.treeControl.toggle(node);
-            // } else if (this.isSelected(node)) {
-            //     this.selectedNode = null;
-            //     this.shareFiles.setSelectedFile(undefined);
         } else {
-            this.selectedNode = node;
-            if (!node.expandable) {
+            // It's a file, so select it.
+            if (!this.isSelected(node)) {
                 this.shareFiles.setSelectedFile(node.id);
             }
+            this.selectedNode = node;
         }
         this.cdr.markForCheck();
     }
 
-    /** --------------------  UTILITIES  ---------------------- **/
-    showLoading() {
+    /**
+     * Adds a 'loading' class to the body to indicate a pending operation.
+     * This is useful for providing visual feedback to the user.
+     */
+    showLoading(): void {
         document.body.classList.add('loading');
     }
-    removeLoading() {
+
+    /**
+     * Removes the 'loading' class from the body.
+     */
+    removeLoading(): void {
         document.body.classList.remove('loading');
     }
-
-    // Keep your edit/add/remove modal logic as before
 }

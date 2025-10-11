@@ -4,14 +4,15 @@ import {
     fakeAsync,
     tick,
 } from '@angular/core/testing';
-import { of, Subject, throwError } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { TreeFileComponent } from './tree-file.component';
 import { FilesManagerService } from '../../services/files-manager.service';
 import { SharedFilesService } from '../../services/shared-files.service';
 
+// Mock implementation of FilesManagerService for isolated testing.
 class MockFilesManagerService {
-    getTree = jasmine.createSpy().and.returnValue(
+    getTree = jasmine.createSpy('getTree').and.returnValue(
         of(
             JSON.stringify({
                 dirs: { '1': { name: 'DirA' } },
@@ -20,20 +21,23 @@ class MockFilesManagerService {
         ),
     );
 
-    getDirContent = jasmine.createSpy().and.callFake((id: number) => {
-        if (id === 1) {
-            return of(
-                JSON.stringify({
-                    files: { '3': { name: 'NestedFileA' } },
-                }),
-            );
-        }
-        return of(JSON.stringify({ files: {} }));
-    });
+    getDirContent = jasmine
+        .createSpy('getDirContent')
+        .and.callFake((id: number) => {
+            if (id === 1) {
+                return of(
+                    JSON.stringify({
+                        files: { '3': { name: 'NestedFileA' } },
+                    }),
+                );
+            }
+            return of(JSON.stringify({ files: {} }));
+        });
 }
 
+// Mock implementation of SharedFilesService for isolated testing.
 class MockSharedFilesService {
-    setSelectedFile = jasmine.createSpy();
+    setSelectedFile = jasmine.createSpy('setSelectedFile');
 }
 
 describe('TreeFileComponent', () => {
@@ -43,9 +47,11 @@ describe('TreeFileComponent', () => {
     let mockSharedFilesService: MockSharedFilesService;
 
     beforeEach(async () => {
+        // Create instances of the mock services.
         mockFilesManagerService = new MockFilesManagerService();
         mockSharedFilesService = new MockSharedFilesService();
 
+        // Configure the testing module with the component and mock providers.
         await TestBed.configureTestingModule({
             imports: [HttpClientTestingModule, TreeFileComponent],
             providers: [
@@ -60,9 +66,10 @@ describe('TreeFileComponent', () => {
             ],
         }).compileComponents();
 
+        // Create the component fixture and instance.
         fixture = TestBed.createComponent(TreeFileComponent);
         component = fixture.componentInstance;
-        fixture.detectChanges();
+        fixture.detectChanges(); // Trigger initial data binding.
     });
 
     it('should create the component', () => {
@@ -72,40 +79,41 @@ describe('TreeFileComponent', () => {
     // ------------------------------------
     // Functional tests
     // ------------------------------------
-    it('should load directories and files correctly', fakeAsync(() => {
+
+    it('should load directories and files correctly on initialization', fakeAsync(() => {
         spyOn(localStorage, 'getItem').and.returnValue('FAKE_TOKEN');
 
         component.updateTree();
-        tick();
+        tick(); // Simulate the passage of time for async operations.
 
-        // Check directory loading.
+        // Check that directories and their children are loaded.
         const data = component.dataSource.data;
-        expect(data.length).toBe(2); // 1 dir + 1 file
+        expect(data.length).toBe(2); // Expect 1 directory and 1 root file.
         const dirNode = data.find((n) => n.name === 'DirA');
         expect(dirNode?.type).toBe('D');
-
-        // With their children files.
         expect(dirNode?.children?.[0].name).toBe('NestedFileA');
 
-        // Check loose files loading.
+        // Check that root-level files are loaded.
         const fileNode = data.find((n) => n.name === 'FileRoot');
         expect(fileNode).toBeDefined();
         expect(fileNode?.type).toBe('F');
-        expect(fileNode?.children).toBeUndefined(); // or []
+        expect(fileNode?.children).toBeUndefined(); // Files should not have children.
     }));
 
-    it('should not load tree if token missing', fakeAsync(() => {
+    it('should not load the tree if the authentication token is missing', fakeAsync(() => {
         spyOn(localStorage, 'getItem').and.returnValue(null);
 
         component.updateTree();
         tick();
 
+        // The data source should be empty.
         expect(component.dataSource.data).toEqual([]);
     }));
 
-    it('should continue loading even if one directory errors', fakeAsync(() => {
-        spyOn(console, 'error'); // Ignore console.error
+    it('should continue loading other directories even if one fails', fakeAsync(() => {
+        spyOn(console, 'error'); // Suppress console error for this test.
 
+        // Simulate an error when fetching directory content.
         mockFilesManagerService.getDirContent.and.returnValue(
             throwError(() => new Error('Network error')),
         );
@@ -114,15 +122,17 @@ describe('TreeFileComponent', () => {
         component.updateTree();
         tick();
 
+        // The tree should still contain other nodes.
         expect(component.dataSource.data.length).toBeGreaterThan(0);
+        // Verify that the error was logged.
         expect(console.error).toHaveBeenCalledWith(
-            'Error loading dir',
+            'Error loading directory content for:',
             'DirA',
             jasmine.any(Error),
-        ); // Check that error was logged.
+        );
     }));
 
-    it('should select file and notify SharedFilesService', () => {
+    it('should select a file and notify SharedFilesService', () => {
         const fileNode = {
             id: 2,
             name: 'FileRoot',
@@ -132,20 +142,23 @@ describe('TreeFileComponent', () => {
 
         component.selectNode(fileNode);
 
+        // The node should be marked as selected.
         expect(component.selectedNode).toEqual(fileNode);
+        // The shared service should be notified with the file ID.
         expect(mockSharedFilesService.setSelectedFile).toHaveBeenCalledWith(2);
     });
 
-    it('should NOT select directory and NOT notify SharedFilesService', () => {
+    it('should not select a directory', () => {
         const dirNode = { id: 1, name: 'DirA', expandable: true, level: 0 };
 
         component.selectNode(dirNode);
 
+        // Directories should not be selectable, only expandable.
         expect(component.selectedNode).toBeNull();
         expect(mockSharedFilesService.setSelectedFile).not.toHaveBeenCalled();
     });
 
-    it('should NOT deselect node when clicking on it again', () => {
+    it('should not deselect a node when clicking on it again', () => {
         const fileNode = {
             id: 2,
             name: 'FileRoot',
@@ -153,20 +166,20 @@ describe('TreeFileComponent', () => {
             level: 0,
         };
 
-        // Select once
+        // First selection.
         component.selectNode(fileNode);
         expect(component.selectedNode).toEqual(fileNode);
         expect(mockSharedFilesService.setSelectedFile).toHaveBeenCalledWith(2);
         expect(mockSharedFilesService.setSelectedFile).toHaveBeenCalledTimes(1);
 
-        // Select again (should still be selected)
+        // Second selection of the same node.
         component.selectNode(fileNode);
-        expect(component.selectedNode).toEqual(fileNode);
-        expect(mockSharedFilesService.setSelectedFile).toHaveBeenCalledWith(2);
-        expect(mockSharedFilesService.setSelectedFile).toHaveBeenCalledTimes(2);
+        expect(component.selectedNode).toEqual(fileNode); // Still selected.
+        // The service is NOT called again.
+        expect(mockSharedFilesService.setSelectedFile).toHaveBeenCalledTimes(1);
     });
 
-    it('should select nested file and notify SharedFilesService', () => {
+    it('should select a nested file and notify SharedFilesService', () => {
         const nestedFile = {
             id: 5,
             name: 'Nested.txt',
@@ -183,7 +196,8 @@ describe('TreeFileComponent', () => {
     // ------------------------------------
     // Visual tests
     // ------------------------------------
-    it('should toggle loading class on body', () => {
+
+    it('should toggle the loading class on the document body', () => {
         component.showLoading();
         expect(document.body.classList.contains('loading')).toBeTrue();
 
@@ -191,10 +205,11 @@ describe('TreeFileComponent', () => {
         expect(document.body.classList.contains('loading')).toBeFalse();
     });
 
-    it('should call showLoading and removeLoading at correct times (sync)', () => {
+    it('should call showLoading and removeLoading during a synchronous tree update', () => {
         spyOn(component, 'showLoading').and.callThrough();
         spyOn(component, 'removeLoading').and.callThrough();
 
+        // Mock synchronous service calls.
         mockFilesManagerService.getTree.and.returnValue(
             of(
                 JSON.stringify({
@@ -209,6 +224,7 @@ describe('TreeFileComponent', () => {
 
         component.updateTree();
 
+        // Both methods should have been called once.
         expect(component.showLoading).toHaveBeenCalledTimes(1);
         expect(component.removeLoading).toHaveBeenCalledTimes(1);
     });
@@ -219,27 +235,29 @@ describe('TreeFileComponent', () => {
         tick();
         fixture.detectChanges();
 
-        const folderIcons = fixture.nativeElement.querySelectorAll('mat-icon');
-        expect(folderIcons.length).toBeGreaterThan(0);
+        const icons = fixture.nativeElement.querySelectorAll('mat-icon');
+        expect(icons.length).toBeGreaterThan(0);
+        // Check that node names are rendered.
         expect(fixture.nativeElement.textContent).toContain('DirA');
         expect(fixture.nativeElement.textContent).toContain('FileRoot');
     }));
 
-    it('should apply selected-node class when node is selected', () => {
+    it('should apply the "selected-node" class when a node is selected', () => {
+        // Set up the data source with a file node.
         component.dataSource.data = [{ id: 2, name: 'FileRoot', type: 'F' }];
         fixture.detectChanges();
 
         const flatNode = component.treeControl.dataNodes[0];
         const nodeElement = fixture.nativeElement.querySelector('.file-node');
 
-        // Avant sélection
+        // Before selection.
         expect(nodeElement.classList.contains('selected-node')).toBeFalse();
 
-        // Sélection
+        // Perform selection.
         component.selectNode(flatNode);
         fixture.detectChanges();
 
-        // Après sélection
+        // After selection.
         expect(nodeElement.classList.contains('selected-node')).toBeTrue();
     });
 });

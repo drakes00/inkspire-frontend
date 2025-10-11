@@ -1,3 +1,7 @@
+/*
+ * Main container for the file system tree.
+ * It fills the vertical space of the viewport and sets up a flex column layout.
+ */
 .file-system-container {
     height: 100vh;
     display: flex;
@@ -5,6 +9,11 @@
     background-color: #f5f5f5;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
+
+/*
+ * Bar for action buttons.
+ * It is aligned to the end of the container.
+ */
 .actions-bar {
     padding: 8px 16px;
     display: flex;
@@ -12,49 +21,81 @@
     background-color: #f5f5f5;
     border-bottom: 1px solid #e0e0e0;
 }
-/* MDC Tree Container */
+
+/*
+ * Styles for the Material Design Components (MDC) tree container.
+ * It takes up the remaining space and allows for vertical scrolling.
+ */
 .mdc-tree {
     background-color: white;
     flex: 1;
     overflow-y: auto;
 }
-/* Base styles for all nodes */
+
+/*
+ * Base styles for all tree nodes.
+ * Sets a minimum height and a transition for hover effects.
+ */
 .mdc-tree-node {
     cursor: pointer;
     min-height: 40px;
     transition: background-color 0.2s;
     display: block;
 }
-/* MDC Tree Node Content */
+
+/*
+ * Styles for the content within a tree node.
+ * Aligns items horizontally with a small gap.
+ */
 .mdc-tree-node-content {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 0 16px; /* Default padding for directories */
+    padding: 0 16px; /* Default padding for all nodes */
     height: 40px;
 }
-/* Indent ONLY file nodes based on their aria-level */
+
+/*
+ * Indentation for file nodes based on their depth in the tree.
+ * `aria-level` is used to determine the depth.
+ */
 .file-node[aria-level="1"] .mdc-tree-node-content {
-    padding-left: 0px; /* Root-level files */
+    padding-left: 0px; /* No indentation for root-level files */
 }
+
 .file-node[aria-level="2"] .mdc-tree-node-content {
-    padding-left: 40px; /* Files inside a directory */
+    padding-left: 40px; /* Indentation for files inside a directory */
 }
-/* Hide the toggle button for files */
+
+/*
+ * Hides the toggle button for file nodes, as they are not expandable.
+ * This keeps the file icon aligned with directory icons.
+ */
 .file-node button[disabled] {
     visibility: hidden;
     width: 24px;
 }
-/* Hover effect for MDC tree nodes */
+
+/*
+ * Hover effect for all tree nodes.
+ * Provides visual feedback when the mouse is over a node.
+ */
 .mdc-tree-node:hover {
     background-color: #f0f0f0;
 }
-/* Selected node styling */
+
+/*
+ * Styles for the currently selected node.
+ * Highlights the node with a different background color and a left border.
+ */
 .selected-node {
     background-color: #e3f2fd !important;
     border-left: 3px solid #2196f3;
 }
-/* Icon styling */
+
+/*
+ * General styling for Material icons within the tree.
+ */
 mat-icon {
     color: #555;
 }
