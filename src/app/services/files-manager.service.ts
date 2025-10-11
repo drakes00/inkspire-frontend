@@ -97,6 +97,12 @@ export class FilesManagerService {
 	}
 
 
+	/**
+	 * Retrieves the root of the file system tree for the authenticated user.
+	 * This includes all root-level files and directories.
+	 * @param token The authentication token for the user.
+	 * @returns An Observable containing the JSON string of the file system tree.
+	 */
 	public getTree(token : string): Observable<string>
 	{
 		const url = "/api/tree";
@@ -110,6 +116,13 @@ export class FilesManagerService {
 		);
 	}
 
+	/**
+	 * Retrieves the content of a specific directory.
+	 * This includes all files within that directory.
+	 * @param id The ID of the directory to retrieve.
+	 * @param token The authentication token for the user.
+	 * @returns An Observable containing the JSON string of the directory's content.
+	 */
 	public getDirContent(id: number, token: string): Observable<string> {
 		const url = `/api/dir/${id}`;
 		const headers = new HttpHeaders({
