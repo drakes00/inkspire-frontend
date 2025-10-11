@@ -193,19 +193,31 @@ export class TreeFileComponent {
     }
 
     /** --------------------  NODE SELECTION  ---------------------- **/
-    isSelected(node: ExampleFlatNode): boolean {
-        return this.selectedNode?.id === node.id;
+    private getNodeKey(node: ExampleFlatNode): string {
+        return `${node.expandable ? 'D' : 'F'}-${node.id}`;
     }
 
-    selectNode(node: ExampleFlatNode): void {
-        if (this.isSelected(node)) {
-            this.selectedNode = null;
-            this.shareFiles.setSelectedFile(undefined);
-            return;
+    isSelected(node: ExampleFlatNode): boolean {
+        if (!this.selectedNode) return false;
+        return this.getNodeKey(this.selectedNode) === this.getNodeKey(node);
+    }
+
+    selectNode(node: ExampleFlatNode, event?: MouseEvent): void {
+        if (event) {
+            event.stopPropagation();
         }
-        this.selectedNode = node;
-        if (!node.expandable) {
-            this.shareFiles.setSelectedFile(node.id);
+
+        // Si c'est un dossier, toggle l'expansion
+        if (node.expandable) {
+            this.treeControl.toggle(node);
+            // } else if (this.isSelected(node)) {
+            //     this.selectedNode = null;
+            //     this.shareFiles.setSelectedFile(undefined);
+        } else {
+            this.selectedNode = node;
+            if (!node.expandable) {
+                this.shareFiles.setSelectedFile(node.id);
+            }
         }
         this.cdr.markForCheck();
     }

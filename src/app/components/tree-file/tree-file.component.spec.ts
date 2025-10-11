@@ -136,16 +136,16 @@ describe('TreeFileComponent', () => {
         expect(mockSharedFilesService.setSelectedFile).toHaveBeenCalledWith(2);
     });
 
-    it('should select directory but NOT notify SharedFilesService', () => {
+    it('should NOT select directory and NOT notify SharedFilesService', () => {
         const dirNode = { id: 1, name: 'DirA', expandable: true, level: 0 };
 
         component.selectNode(dirNode);
 
-        expect(component.selectedNode).toEqual(dirNode);
+        expect(component.selectedNode).toBeNull();
         expect(mockSharedFilesService.setSelectedFile).not.toHaveBeenCalled();
     });
 
-    it('should deselect node and notify SharedFilesService(undefined)', () => {
+    it('should NOT deselect node when clicking on it again', () => {
         const fileNode = {
             id: 2,
             name: 'FileRoot',
@@ -156,14 +156,14 @@ describe('TreeFileComponent', () => {
         // Select once
         component.selectNode(fileNode);
         expect(component.selectedNode).toEqual(fileNode);
+        expect(mockSharedFilesService.setSelectedFile).toHaveBeenCalledWith(2);
+        expect(mockSharedFilesService.setSelectedFile).toHaveBeenCalledTimes(1);
 
-        // Select again (toggle off)
+        // Select again (should still be selected)
         component.selectNode(fileNode);
-
-        expect(component.selectedNode).toBeNull();
-        expect(mockSharedFilesService.setSelectedFile).toHaveBeenCalledWith(
-            undefined,
-        );
+        expect(component.selectedNode).toEqual(fileNode);
+        expect(mockSharedFilesService.setSelectedFile).toHaveBeenCalledWith(2);
+        expect(mockSharedFilesService.setSelectedFile).toHaveBeenCalledTimes(2);
     });
 
     it('should select nested file and notify SharedFilesService', () => {
