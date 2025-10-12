@@ -3,54 +3,33 @@
     It provides a consistent layout and background.
 -->
 <div class="file-system-container">
-    <!-- Application Title -->
-    <div style="text-align: center;">
-        <p>INKSPIRE</p>
+    <!-- Application Title and Root Actions -->
+    <div class="title-bar">
+        <span>INKSPIRE</span>
+        <button mat-icon-button [matMenuTriggerFor]="rootActionsMenu" aria-label="Open root actions menu">
+            <mat-icon>more_vert</mat-icon>
+        </button>
     </div>
 
-    <!--
-        Context menu for file and directory actions.
-        Currently disabled, but can be used for future features like
-        editing, deleting, or adding new items.
-    -->
-    <mat-menu #fileMenu="matMenu">
-        <!--   <button mat-menu-item (click)="handleEditAction()" [disabled]="!selectedNode"> -->
-        <!--     <mat-icon>edit</mat-icon> -->
-        <!--     <span>Edit name</span> -->
-        <!--   </button> -->
-        <!--   <button mat-menu-item (click)="handleRemoveAction()" [disabled]="!selectedNode"> -->
-        <!--     <mat-icon>delete</mat-icon> -->
-        <!--     <span>Remove</span> -->
-        <!--   </button> -->
-        <!--   <button mat-menu-item (click)="handleAddAction()" [disabled]="selectedNode && !selectedNode.expandable"> -->
-        <!--     <mat-icon>add</mat-icon> -->
-        <!--     <span>Add new item</span> -->
-        <!--   </button> -->
+    <!-- Menu for root-level actions -->
+    <mat-menu #rootActionsMenu="matMenu">
+        <button mat-menu-item (click)="handleCreateFile(null)">
+            <mat-icon>note_add</mat-icon>
+            <span>New File</span>
+        </button>
+        <button mat-menu-item (click)="handleCreateDirectory(null)">
+            <mat-icon>create_new_folder</mat-icon>
+            <span>New Directory</span>
+        </button>
     </mat-menu>
 
-    <!--
-        Modal components for user interaction.
-        These are conditionally rendered based on component state.
-        Currently disabled.
-    -->
-    <!-- @if (isModalVisible){ -->
-    <!--   <app-modal-choice [title]="title" (close)="hideModal()" (validate)="handleModalValidate($event)"></app-modal-choice> -->
-    <!-- } -->
-    <!--  @if (isEditModalVisible){ -->
-    <!--   <app-modal-edit [title]="title" [titleFile]="nameOfNode" [context]="contextOfDir" [showTextarea]="isDirectoryEditing" (close)="hideModal()" (validate)="handleModalValidate($event)"></app-modal-edit> -->
-    <!-- } -->
-
-    <!--
-        Actions bar, intended to hold buttons for primary actions.
-        Currently disabled. The menu trigger below is an example of its intended use.
-    -->
-    <!-- <div class="actions-bar"> -->
-    <!--   <button -->
-    <!--     mat-icon-button -->
-    <!--     [matMenuTriggerFor]="fileMenu"> -->
-    <!--     <mat-icon>more_vert</mat-icon> -->
-    <!--   </button> -->
-    <!-- </div> -->
+    <!-- Menu for directory-level actions -->
+    <mat-menu #dirActionsMenu="matMenu">
+        <button mat-menu-item (click)="handleCreateFile(contextNode!.id)">
+            <mat-icon>note_add</mat-icon>
+            <span>New File</span>
+        </button>
+    </mat-menu>
 
     <!--
         The main Material Tree component that displays the file system.
@@ -73,6 +52,11 @@
                 </button>
                 <mat-icon>folder</mat-icon>
                 <span class="node-name"> {{node.name}}</span>
+                <span class="node-actions">
+                    <button mat-icon-button [matMenuTriggerFor]="dirActionsMenu" (click)="onDirMenuOpen(node, $event)" aria-label="Open directory actions menu">
+                        <mat-icon>more_vert</mat-icon>
+                    </button>
+                </span>
             </div>
             <!-- This div holds the nested nodes and is shown/hidden based on expansion state. -->
             <div [class.example-tree-invisible]="!treeControl.isExpanded(node)">
@@ -98,4 +82,14 @@
             </div>
         </mat-tree-node>
     </mat-tree>
+
+    @if (isModalVisible) {
+        <app-modal-choice 
+            [title]="modalTitle"
+            [itemType]="modalItemType"
+            [isVisible]="isModalVisible"
+            (close)="closeCreationModal()"
+            (validate)="onCreationModalValidate($event)">
+        </app-modal-choice>
+    }
 </div>

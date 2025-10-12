@@ -1,22 +1,27 @@
 <div class="modal-overlay" (click)="closeModal()">
     <div class="modal-content" (click)="$event.stopPropagation()">        
         <h4>{{ title }}</h4>
-        <div>
-            <input type="radio" id="file" name="choice" value="file" [(ngModel)]="selectedType"/>
-            <label for="file">File</label>
 
-            <input type="radio" id="directory" name="choice" value="directory" [(ngModel)]="selectedType"/>
-            <label for="directory">Directory</label>
-        </div>
-        @if (selectedType == 'directory')
+        @if (itemType === 'choice') {
+            <div>
+                <input type="radio" id="file" name="choice" value="file" [(ngModel)]="selectedType"/>
+                <label for="file">File</label>
+
+                <input type="radio" id="directory" name="choice" value="directory" [(ngModel)]="selectedType"/>
+                <label for="directory">Directory</label>
+            </div>
+        }
+
+        @if (selectedType === 'directory')
         {
+            <p>Context (optional):</p>
             <textarea [(ngModel)]="context" type="text" rows="3" cols="40"></textarea>
         }
-        <p>Name of the {{ selectedType }}: </p>
-        <textarea [(ngModel)]="textValue" type="text" rows="1" cols="40"></textarea>
+        <p>Name:</p>
+        <textarea [(ngModel)]="nameValue" type="text" rows="1" cols="40"></textarea>
         <br>
         <br>
         <button (click)="validateModal()">Validate</button>
         <button (click)="closeModal()">Cancel</button>
     </div>
-  </div>
+</div>

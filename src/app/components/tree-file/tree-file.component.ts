@@ -45,43 +45,18 @@ interface FileSystemNode {
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TreeFileComponent {
-    /**
-     * The title for modals.
-     */
-    title = "";
-    /**
-     * Flag to control the visibility of the choice modal.
-     */
-    isModalVisible = false;
-    /**
-     * Flag to control the visibility of the edit modal.
-     */
-    isEditModalVisible = false;
-    /**
-     * Flag to indicate if a directory is being edited.
-     */
-    isDirectoryEditing = false;
-    /**
-     * The context of the directory being edited.
-     */
-    contextOfDir = "";
-    /**
-     * The name of the node being edited.
-     */
-    nameOfNode = "";
-    /**
-     * The currently selected node in the tree.
-     */
-    selectedNode: ExampleFlatNode | null = null;
-    /**
-     * The root of the file system structure.
-     */
+    // -------------------- COMPONENT PROPERTIES --------------------
+
+    /** The root of the file system structure. */
     FILE_SYSTEM: FileSystemNode[] = [];
 
-    /**
-     * Transforms a `FileSystemNode` to a `ExampleFlatNode`.
-     * This is used by the tree flattener.
-     */
+    /** The currently selected node in the tree. */
+    selectedNode: ExampleFlatNode | null = null;
+
+    /** The node that the context menu is opened for. */
+    contextNode: ExampleFlatNode | null = null;
+
+    /** Transforms a `FileSystemNode` to a `ExampleFlatNode`. This is used by the tree flattener. */
     private _transformer = (node: FileSystemNode, level: number): ExampleFlatNode => ({
         id: node.id,
         expandable: node.type === "D",
@@ -89,17 +64,13 @@ export class TreeFileComponent {
         level,
     });
 
-    /**
-     * The tree control for the Material tree. It manages the expansion state of nodes.
-     */
+    /** The tree control for the Material tree. It manages the expansion state of nodes. */
     treeControl = new FlatTreeControl<ExampleFlatNode>(
         (node) => node.level,
         (node) => node.expandable,
     );
 
-    /**
-     * The tree flattener for the Material tree. It flattens the hierarchical tree structure.
-     */
+    /** The tree flattener for the Material tree. It flattens the hierarchical tree structure. */
     treeFlattener = new MatTreeFlattener(
         this._transformer,
         (node) => node.level,
@@ -107,10 +78,22 @@ export class TreeFileComponent {
         (node) => node.children,
     );
 
-    /**
-     * The data source for the Material tree.
-     */
+    /** The data source for the Material tree. */
     dataSource = new MatTreeFlatDataSource(this.treeControl, this.treeFlattener);
+
+    // --- Modal Properties ---
+
+    /** Flag to control the visibility of the creation modal. */
+    isModalVisible = false;
+
+    /** The title for the creation modal. */
+    modalTitle = "";
+
+    /** The type of item to be created in the modal ('file' or 'directory'). */
+    modalItemType: "file" | "directory" = "file";
+
+    /** The ID of the parent directory for the new item creation. */
+    creationDirectoryId: number | null = null;
 
     /**
      * Initializes the component, injects dependencies, and triggers the initial tree update.
@@ -125,6 +108,8 @@ export class TreeFileComponent {
     ) {
         this.updateTree();
     }
+
+    // --------------------  TREE DISPLAY & NAVIGATION  --------------------
 
     /**
      * Checks if a node has children. Used by the tree definition.
@@ -273,6 +258,68 @@ export class TreeFileComponent {
         }
         this.cdr.markForCheck();
     }
+
+    // --------------------  ACTIONS & MODAL HANDLING  --------------------
+
+    /**
+     * Opens the creation modal for a new file.
+     * @param directoryId The ID of the parent directory. If null, the file is created at the root.
+     */
+    handleCreateFile(directoryId: number | null = null): void {
+        this.modalTitle = "Create New File";
+        this.modalItemType = "file";
+        this.creationDirectoryId = directoryId;
+        this.isModalVisible = true;
+        this.cdr.markForCheck();
+    }
+
+    /**
+     * Opens the creation modal for a new directory.
+     * @param directoryId The ID of the parent directory. If null, the directory is created at the root.
+     */
+    handleCreateDirectory(directoryId: number | null = null): void {
+        this.modalTitle = "Create New Directory";
+        this.modalItemType = "directory";
+        this.creationDirectoryId = directoryId;
+        this.isModalVisible = true;
+        this.cdr.markForCheck();
+    }
+
+    /**
+     * Sets the context node for the directory actions menu.
+     * @param node The node for which the menu is opened.
+     * @param event The mouse event.
+     */
+    onDirMenuOpen(node: ExampleFlatNode, event: MouseEvent): void {
+        event.stopPropagation();
+        this.contextNode = node;
+    }
+
+    /**
+     * Closes the creation modal.
+     */
+    closeCreationModal(): void {
+        this.isModalVisible = false;
+    }
+
+    /**
+     * Handles the validation event from the creation modal.
+     * @param event The event payload from the modal.
+     */
+    onCreationModalValidate(event: { name: string; type: string; context: string }): void {
+        this.isModalVisible = false;
+        console.log(
+            `Creating ${event.type} with name "${event.name}" in directory ID: ${this.creationDirectoryId === null ? "root" : this.creationDirectoryId}`,
+        );
+        if (event.type === "directory") {
+            console.log(`With context: ${event.context}`);
+        }
+        // Here we would call the FilesManagerService
+        // e.g. this.filesManagerService.addFile(token, event.name, this.creationDirectoryId);
+        // And then call this.updateTree() on success.
+    }
+
+    // --------------------  UTILITIES  ---------------------------------
 
     /**
      * Adds a 'loading' class to the body to indicate a pending operation.

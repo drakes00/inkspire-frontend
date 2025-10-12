@@ -11,15 +11,29 @@
 }
 
 /*
- * Bar for action buttons.
- * It is aligned to the end of the container.
+ * Styles for the title bar containing the application title and root actions menu.
  */
-.actions-bar {
-    padding: 8px 16px;
+.title-bar {
     display: flex;
-    justify-content: flex-end;
-    background-color: #f5f5f5;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    height: 48px;
+    padding: 0 16px;
     border-bottom: 1px solid #e0e0e0;
+    background-color: #f5f5f5;
+}
+
+.title-bar span {
+    font-weight: bold;
+}
+
+/*
+ * Position the menu button on the right, inside the title bar.
+ */
+.title-bar > button {
+    position: absolute;
+    right: 8px;
 }
 
 /*
@@ -51,8 +65,20 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 0 16px; /* Default padding for all nodes */
+    padding: 0 8px 0 16px;
     height: 40px;
+}
+
+.node-name {
+    flex-grow: 1;
+}
+
+.node-actions {
+    visibility: hidden;
+}
+
+.mdc-tree-node:hover .node-actions {
+    visibility: visible;
 }
 
 /*
