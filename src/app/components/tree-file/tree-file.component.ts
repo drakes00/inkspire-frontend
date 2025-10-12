@@ -1,14 +1,6 @@
-import {
-    ChangeDetectionStrategy,
-    ChangeDetectorRef,
-    Component,
-} from "@angular/core";
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from "@angular/core";
 import { FlatTreeControl } from "@angular/cdk/tree";
-import {
-    MatTreeFlatDataSource,
-    MatTreeFlattener,
-    MatTreeModule,
-} from "@angular/material/tree";
+import { MatTreeFlatDataSource, MatTreeFlattener, MatTreeModule } from "@angular/material/tree";
 import { MatIconModule } from "@angular/material/icon";
 import { MatButtonModule } from "@angular/material/button";
 import { MatMenuModule } from "@angular/material/menu";
@@ -47,14 +39,7 @@ interface FileSystemNode {
  */
 @Component({
     selector: "app-tree-file",
-    imports: [
-        MatTreeModule,
-        MatButtonModule,
-        MatIconModule,
-        MatMenuModule,
-        ModalChoiceComponent,
-        ModalEditComponent,
-    ],
+    imports: [MatTreeModule, MatButtonModule, MatIconModule, MatMenuModule, ModalChoiceComponent, ModalEditComponent],
     templateUrl: "./tree-file.component.html",
     styleUrls: ["./tree-file.component.css"],
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -97,10 +82,7 @@ export class TreeFileComponent {
      * Transforms a `FileSystemNode` to a `ExampleFlatNode`.
      * This is used by the tree flattener.
      */
-    private _transformer = (
-        node: FileSystemNode,
-        level: number,
-    ): ExampleFlatNode => ({
+    private _transformer = (node: FileSystemNode, level: number): ExampleFlatNode => ({
         id: node.id,
         expandable: node.type === "D",
         name: node.name,
@@ -128,10 +110,7 @@ export class TreeFileComponent {
     /**
      * The data source for the Material tree.
      */
-    dataSource = new MatTreeFlatDataSource(
-        this.treeControl,
-        this.treeFlattener,
-    );
+    dataSource = new MatTreeFlatDataSource(this.treeControl, this.treeFlattener);
 
     /**
      * Initializes the component, injects dependencies, and triggers the initial tree update.
@@ -178,62 +157,47 @@ export class TreeFileComponent {
                     const dirs = jsonResponse.dirs || {};
 
                     const rootNodes: FileSystemNode[] = [];
-                    const dirRequests = Object.entries(dirs).map(
-                        ([dirId, dir]) => {
-                            const dirNode: FileSystemNode = {
-                                id: parseInt(dirId, 10),
-                                name: (dir as any).name,
-                                type: "D",
-                                children: [],
-                            };
+                    const dirRequests = Object.entries(dirs).map(([dirId, dir]) => {
+                        const dirNode: FileSystemNode = {
+                            id: parseInt(dirId, 10),
+                            name: (dir as any).name,
+                            type: "D",
+                            children: [],
+                        };
 
-                            rootNodes.push(dirNode);
+                        rootNodes.push(dirNode);
 
-                            // Request content for each directory
-                            return this.filesManagerService
-                                .getDirContent(dirNode.id, token)
-                                .pipe(
-                                    map((res) => {
-                                        const jsonRes = JSON.parse(res);
-                                        const files = jsonRes.files || {};
-                                        const children: FileSystemNode[] = [];
+                        // Request content for each directory
+                        return this.filesManagerService.getDirContent(dirNode.id, token).pipe(
+                            map((res) => {
+                                const jsonRes = JSON.parse(res);
+                                const files = jsonRes.files || {};
+                                const children: FileSystemNode[] = [];
 
-                                        for (const fileId in files) {
-                                            if (
-                                                Object.prototype.hasOwnProperty.call(
-                                                    files,
-                                                    fileId,
-                                                )
-                                            ) {
-                                                const file = files[fileId];
-                                                children.push({
-                                                    id: parseInt(fileId, 10),
-                                                    name: file.name,
-                                                    type: "F",
-                                                });
-                                            }
-                                        }
-                                        dirNode.children = children;
-                                        return dirNode;
-                                    }),
-                                    catchError((err) => {
-                                        console.error(
-                                            "Error loading directory content for:",
-                                            dirNode.name,
-                                            err,
-                                        );
-                                        // Return the directory node even if content loading fails
-                                        return of(dirNode);
-                                    }),
-                                );
-                        },
-                    );
+                                for (const fileId in files) {
+                                    if (Object.prototype.hasOwnProperty.call(files, fileId)) {
+                                        const file = files[fileId];
+                                        children.push({
+                                            id: parseInt(fileId, 10),
+                                            name: file.name,
+                                            type: "F",
+                                        });
+                                    }
+                                }
+                                dirNode.children = children;
+                                return dirNode;
+                            }),
+                            catchError((err) => {
+                                console.error("Error loading directory content for:", dirNode.name, err);
+                                // Return the directory node even if content loading fails
+                                return of(dirNode);
+                            }),
+                        );
+                    });
 
                     // Add root-level files
                     for (const fileId in files) {
-                        if (
-                            Object.prototype.hasOwnProperty.call(files, fileId)
-                        ) {
+                        if (Object.prototype.hasOwnProperty.call(files, fileId)) {
                             const file = files[fileId];
                             rootNodes.push({
                                 id: parseInt(fileId, 10),
@@ -247,16 +211,22 @@ export class TreeFileComponent {
                 }),
                 // Wait for all directory content requests to complete
                 switchMap(({ rootNodes, dirRequests }) => {
-                    const allRequests =
-                        dirRequests.length > 0 ? forkJoin(dirRequests) : of([]);
+                    const allRequests = dirRequests.length > 0 ? forkJoin(dirRequests) : of([]);
                     return allRequests.pipe(map(() => rootNodes));
                 }),
             )
-            .subscribe((rootNodes) => {
-                this.FILE_SYSTEM = rootNodes;
-                this.dataSource.data = this.FILE_SYSTEM;
-                this.removeLoading();
-                this.cdr.markForCheck(); // Trigger change detection
+            .subscribe({
+                next: (rootNodes) => {
+                    this.FILE_SYSTEM = rootNodes;
+                    this.dataSource.data = this.FILE_SYSTEM;
+                    this.removeLoading();
+                    this.cdr.markForCheck(); // Trigger change detection
+                },
+                error: (err) => {
+                    this.removeLoading();
+                    // The auth interceptor should handle 401 errors and redirect.
+                    console.error("An error occurred while updating the tree:", err);
+                },
             });
     }
 
