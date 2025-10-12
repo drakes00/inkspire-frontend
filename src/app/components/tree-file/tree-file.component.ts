@@ -4,14 +4,12 @@ import { MatTreeFlatDataSource, MatTreeFlattener, MatTreeModule } from "@angular
 import { MatIconModule } from "@angular/material/icon";
 import { MatButtonModule } from "@angular/material/button";
 import { MatMenuModule } from "@angular/material/menu";
-
 import { forkJoin, of } from "rxjs";
 import { catchError, map, switchMap } from "rxjs/operators";
-
 import { ModalComponent } from "../modal/modal.component";
-import { ModalEditComponent } from "../modal-edit/modal-edit.component";
 import { FilesManagerService } from "../../services/files-manager.service";
 import { SharedFilesService } from "../../services/shared-files.service";
+import { ThemeService } from "../../services/theme.service";
 
 /**
  * Represents a flattened node used by the Material tree control.
@@ -39,7 +37,7 @@ interface FileSystemNode {
  */
 @Component({
     selector: "app-tree-file",
-    imports: [MatTreeModule, MatButtonModule, MatIconModule, MatMenuModule, ModalComponent, ModalEditComponent],
+    imports: [MatTreeModule, MatButtonModule, MatIconModule, MatMenuModule, ModalComponent],
     templateUrl: "./tree-file.component.html",
     styleUrls: ["./tree-file.component.css"],
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -59,31 +57,6 @@ export class TreeFileComponent {
     /** The ID of the node for which the menu is currently open. */
     menuOpenForNode: number | null = null;
 
-    /** Transforms a `FileSystemNode` to a `ExampleFlatNode`. This is used by the tree flattener. */
-    private _transformer = (node: FileSystemNode, level: number): ExampleFlatNode => ({
-        id: node.id,
-        expandable: node.type === "D",
-        name: node.name,
-        level,
-    });
-
-    /** The tree control for the Material tree. It manages the expansion state of nodes. */
-    treeControl = new FlatTreeControl<ExampleFlatNode>(
-        (node) => node.level,
-        (node) => node.expandable,
-    );
-
-    /** The tree flattener for the Material tree. It flattens the hierarchical tree structure. */
-    treeFlattener = new MatTreeFlattener(
-        this._transformer,
-        (node) => node.level,
-        (node) => node.expandable,
-        (node) => node.children,
-    );
-
-    /** The data source for the Material tree. */
-    dataSource = new MatTreeFlatDataSource(this.treeControl, this.treeFlattener);
-
     // --- Modal Properties ---
 
     /** Flag to control the visibility of the creation modal. */
@@ -98,16 +71,43 @@ export class TreeFileComponent {
     /** The ID of the parent directory for the new item creation. */
     creationDirectoryId: number | null = null;
 
+    /** Transforms a `FileSystemNode` to a `ExampleFlatNode`. This is used by the tree flattener. */
+    private _transformer = (node: FileSystemNode, level: number): ExampleFlatNode => ({
+        id: node.id,
+        expandable: node.type === "D",
+        name: node.name,
+        level,
+    });
+
+    /** The tree flattener for the Material tree. It flattens the hierarchical tree structure. */
+    treeFlattener = new MatTreeFlattener(
+        this._transformer,
+        (node) => node.level,
+        (node) => node.expandable,
+        (node) => node.children,
+    );
+
+    /** The tree control for the Material tree. It manages the expansion state of nodes. */
+    treeControl = new FlatTreeControl<ExampleFlatNode>(
+        (node) => node.level,
+        (node) => node.expandable,
+    );
+
+    /** The data source for the Material tree. */
+    dataSource = new MatTreeFlatDataSource(this.treeControl, this.treeFlattener);
+
     /**
      * Initializes the component, injects dependencies, and triggers the initial tree update.
      * @param filesManagerService Service to manage file and directory data.
      * @param shareFiles Service to share selected file information across components.
      * @param cdr The change detector reference for manual change detection.
+     * @param themeService Service to manage the application's theme.
      */
     constructor(
         private filesManagerService: FilesManagerService,
         private shareFiles: SharedFilesService,
         private cdr: ChangeDetectorRef,
+        public themeService: ThemeService,
     ) {
         this.updateTree();
     }
@@ -263,6 +263,13 @@ export class TreeFileComponent {
     }
 
     // --------------------  ACTIONS & MODAL HANDLING  --------------------
+
+    /**
+     * Toggles the application's theme between light and dark mode.
+     */
+    toggleTheme(): void {
+        this.themeService.toggleTheme();
+    }
 
     /**
      * Opens the creation modal for a new file.

@@ -11,11 +11,45 @@
 }
 
 .modal-content {
-    background-color: #fff;
+    background-color: var(--component-background);
+    color: var(--text-color);
     padding: 30px;
     border-radius: 10px;
     text-align: center;
     max-width: 500px;
     width: 100%;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 5px 15px var(--box-shadow-color);
+}
+
+.modal-content textarea {
+    background-color: var(--background-color);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 8px;
+    width: 80%;
+    margin-top: 10px;
+    resize: vertical;
+}
+
+.modal-content button {
+    background-color: var(--primary-color);
+    color: #fff; /* Text on primary color button is usually white */
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin: 10px;
+    transition: background-color 0.2s;
+    font-weight: bold;
+}
+
+.modal-content button:hover {
+    opacity: 0.9;
+}
+
+/* Style for the cancel button */
+.modal-content button:last-of-type {
+    background-color: var(--hover-color);
+    color: var(--text-color);
 }

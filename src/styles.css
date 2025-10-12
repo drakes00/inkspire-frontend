@@ -1,17 +1,45 @@
 /* You can add global styles to this file, and also import other style files */
 
-html, body { height: 100%; }
-body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
-
-/*
-.loading{
-    background-color: rgba(0, 0, 0, 0.3) !important;
-    filter: brightness(50%);
+/* Default (light) theme color variables */
+:root {
+  --background-color: #f5f5f5;
+  --text-color: #212121;
+  --primary-color: #2196f3;
+  --component-background: #ffffff;
+  --border-color: #e0e0e0;
+  --box-shadow-color: rgba(0, 0, 0, 0.1);
+  --hover-color: #f0f0f0;
+  --selected-background: #e3f2fd;
+  --selected-border: #2196f3;
+  --icon-color: #555;
 }
-*/
+
+/* Dark theme color variables */
+body.dark-theme {
+  --background-color: #121212;
+  --text-color: #e0e0e0;
+  --primary-color: #90caf9;
+  --component-background: #1e1e1e;
+  --border-color: #424242;
+  --box-shadow-color: rgba(255, 255, 255, 0.1);
+  --hover-color: #2a2a2a;
+  --selected-background: #0d47a1;
+  --selected-border: #90caf9;
+  --icon-color: #bdbdbd;
+}
+
+
+html, body { height: 100%; }
+body { 
+    margin: 0; 
+    font-family: Roboto, "Helvetica Neue", sans-serif;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    transition: background-color 0.3s, color 0.3s;
+}
 
 .loading {
-    position: fixed; /* Pour couvrir tout l'écran */
+    position: fixed; /* To cover the whole screen */
     top: 0;
     left: 0;
     width: 100%;
@@ -19,7 +47,6 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
     background-color: rgba(0, 0, 0, 0.3) !important;
     filter: brightness(70%);
     background: url('//upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Phi_fenomeni.gif/50px-Phi_fenomeni.gif')
-    top center no-repeat; /* Centrer le gif */
-    z-index: 9999; /* S'assurer qu'il est au-dessus des autres éléments */
+    top center no-repeat; /* Center the gif */
+    z-index: 9999; /* Make sure it is on top of other elements */
 }
-

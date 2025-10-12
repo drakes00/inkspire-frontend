@@ -6,9 +6,14 @@
     <!-- Application Title and Root Actions -->
     <div class="title-bar">
         <span>INKSPIRE</span>
-        <button mat-icon-button [matMenuTriggerFor]="rootActionsMenu" aria-label="Open root actions menu">
-            <mat-icon>more_vert</mat-icon>
-        </button>
+        <div>
+            <button mat-icon-button (click)="toggleTheme()" aria-label="Toggle theme">
+                <mat-icon>{{ themeService.isDarkMode() ? 'light_mode' : 'dark_mode' }}</mat-icon>
+            </button>
+            <button mat-icon-button [matMenuTriggerFor]="rootActionsMenu" aria-label="Open root actions menu">
+                <mat-icon>more_vert</mat-icon>
+            </button>
+        </div>
     </div>
 
     <!-- Menu for root-level actions -->
