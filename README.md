@@ -6,89 +6,87 @@
 
 InkSpire is a modern web-based text editor designed for writers who want to leverage the power of AI to enhance their creative process. It provides a clean and organized interface for managing files and directories, along with AI-powered tools to rephrase, translate, and generate text.
 
+---
+
 ## ✨ Features
 
--   **File System Navigation**: A hierarchical tree view to easily organize and navigate through your files and directories.
--   **Rich Text Editor**: A simple and focused writing environment.
--   **AI-Powered Assistance**:
-    -   **Rephrase**: Select text to have it rephrased by the AI.
-    -   **Translate**: Translate your text into different languages.
-    -   **Add Content**: Ask the AI to generate and add new content to your document.
--   **User Authentication**: Secure login system to protect your work.
--   **Dynamic UI**: Interactive menus and modals for a smooth user experience.
+- **AI-Powered Writing Tools**  
+  Rephrase, translate, or expand text directly in your editor.
+- **File System Navigation**  
+  Hierarchical tree view to organize and manage your files.
+- **Clean and Focused Editor**  
+  A distraction-free writing environment with a modern interface.
+- **Authentication**  
+  Secure login system to protect your workspace.
+- **Dynamic UI**  
+  Smooth, interactive menus and modals for a polished user experience.
 
-## 🛠️ Tech Stack
+---
 
--   **[Angular](https://angular.io/)**: A powerful framework for building dynamic single-page applications.
--   **[Angular Material](https://material.angular.io/)**: A UI component library for creating a clean and modern user interface.
--   **[TypeScript](https://www.typescriptlang.org/)**: Superset of JavaScript that adds static typing.
+## 🧠 Technology Stack
+
+- [Angular](https://angular.io/) — Modern framework for single-page applications  
+- [Angular Material](https://material.angular.io/) — UI component library for a clean design  
+- [TypeScript](https://www.typescriptlang.org/) — Strongly-typed JavaScript for safer development
+
+---
 
 ## 🚀 Getting Started
 
 ### Prerequisites
 
--   [Node.js](https://nodejs.org/) (v18.x or later recommended)
--   [npm](https://www.npmjs.com/) (usually comes with Node.js)
+- [Node.js](https://nodejs.org/) v18 or later  
+- npm (comes with Node.js)
 
-### Installation & Running
+### Installation
 
-1.  **Clone the repository:**
-    ```bash
-    git clone <repository-url>
-    cd inkspire-frontend
-    ```
+```bash
+git clone <repository-url>
+cd inkspire-frontend
+npm install
+npm start
+````
 
-2.  **Install dependencies:**
-    ```bash
-    npm install
-    ```
-
-3.  **Run the development server:**
-    ```bash
-    npm start
-    ```
-    The application will be available at `http://localhost:4200/`. It will automatically reload if you make changes to the source files.
-
-## 📂 Project Structure
-
-The core application logic is located in the `src/app` directory:
-
-```
-src/app/
-├── components/
-│   ├── tree-file/    # The main file system navigation component
-│   ├── text-component/ # The main text editor component
-│   ├── modal/          # Reusable modal for user input
-│   └── ...
-├── services/
-│   ├── files-manager.service.ts  # Handles all API calls for file/directory operations
-│   ├── ollama.service.ts         # Interacts with the Ollama AI service
-│   ├── auth.interceptor.ts       # Intercepts HTTP requests to handle authentication
-│   └── ...
-├── app.routes.ts     # Defines the application's routes (login, main page)
-└── ...
-```
+Then open [http://localhost:4200](http://localhost:4200) in your browser.
+The app reloads automatically when you make source code changes.
 
 ---
 
-*This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 17.3.9.*
+## 🧪 Quality and Testing
 
-## Code scaffolding
+InkSpire uses **AI-assisted development** tools to accelerate coding, followed by **human validation** and **automated tests** for correctness.
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+Run unit tests:
 
-## Build
+```bash
+npm test
+```
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
+Build for production:
 
-## Running unit tests
+```bash
+npm run build
+```
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+Continuous integration and expanded test coverage are being progressively integrated.
 
-## Running end-to-end tests
+---
 
-Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
+## 📜 License
 
-## Further help
+This project is released under the [MIT License](LICENSE).
+It is provided *as is*, without warranty, but every effort is made to ensure code reliability and responsible use of AI-generated components.
 
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
+---
+
+## 💬 Acknowledgments
+
+InkSpire is based on a code developped by:
+
+- Evann Abrial
+- Lola Chalmin
+- Roxane Rossetto
+
+---
+
+*© 2025 InkSpire. Built with care, code, and a bit of inkSpiration.*
