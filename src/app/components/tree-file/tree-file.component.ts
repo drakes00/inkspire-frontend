@@ -2,24 +2,24 @@ import {
     ChangeDetectionStrategy,
     ChangeDetectorRef,
     Component,
-} from '@angular/core';
-import { FlatTreeControl } from '@angular/cdk/tree';
+} from "@angular/core";
+import { FlatTreeControl } from "@angular/cdk/tree";
 import {
     MatTreeFlatDataSource,
     MatTreeFlattener,
     MatTreeModule,
-} from '@angular/material/tree';
-import { MatIconModule } from '@angular/material/icon';
-import { MatButtonModule } from '@angular/material/button';
-import { MatMenuModule } from '@angular/material/menu';
+} from "@angular/material/tree";
+import { MatIconModule } from "@angular/material/icon";
+import { MatButtonModule } from "@angular/material/button";
+import { MatMenuModule } from "@angular/material/menu";
 
-import { forkJoin, of } from 'rxjs';
-import { catchError, map, switchMap } from 'rxjs/operators';
+import { forkJoin, of } from "rxjs";
+import { catchError, map, switchMap } from "rxjs/operators";
 
-import { ModalChoiceComponent } from '../modal-choice/modal-choice.component';
-import { ModalEditComponent } from '../modal-edit/modal-edit.component';
-import { FilesManagerService } from '../../services/files-manager.service';
-import { SharedFilesService } from '../../services/shared-files.service';
+import { ModalChoiceComponent } from "../modal-choice/modal-choice.component";
+import { ModalEditComponent } from "../modal-edit/modal-edit.component";
+import { FilesManagerService } from "../../services/files-manager.service";
+import { SharedFilesService } from "../../services/shared-files.service";
 
 /**
  * Represents a flattened node used by the Material tree control.
@@ -37,7 +37,7 @@ interface ExampleFlatNode {
 interface FileSystemNode {
     id: number;
     name: string;
-    type: 'D' | 'F'; // D for Directory, F for File
+    type: "D" | "F"; // D for Directory, F for File
     children?: FileSystemNode[];
 }
 
@@ -46,7 +46,7 @@ interface FileSystemNode {
  * It allows users to navigate through directories and select files.
  */
 @Component({
-    selector: 'app-tree-file',
+    selector: "app-tree-file",
     imports: [
         MatTreeModule,
         MatButtonModule,
@@ -55,15 +55,15 @@ interface FileSystemNode {
         ModalChoiceComponent,
         ModalEditComponent,
     ],
-    templateUrl: './tree-file.component.html',
-    styleUrls: ['./tree-file.component.css'],
+    templateUrl: "./tree-file.component.html",
+    styleUrls: ["./tree-file.component.css"],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TreeFileComponent {
     /**
      * The title for modals.
      */
-    title = '';
+    title = "";
     /**
      * Flag to control the visibility of the choice modal.
      */
@@ -79,11 +79,11 @@ export class TreeFileComponent {
     /**
      * The context of the directory being edited.
      */
-    contextOfDir = '';
+    contextOfDir = "";
     /**
      * The name of the node being edited.
      */
-    nameOfNode = '';
+    nameOfNode = "";
     /**
      * The currently selected node in the tree.
      */
@@ -102,7 +102,7 @@ export class TreeFileComponent {
         level: number,
     ): ExampleFlatNode => ({
         id: node.id,
-        expandable: node.type === 'D',
+        expandable: node.type === "D",
         name: node.name,
         level,
     });
@@ -161,7 +161,7 @@ export class TreeFileComponent {
      */
     updateTree(): void {
         this.showLoading();
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem("token");
 
         if (!token) {
             this.dataSource.data = [];
@@ -183,7 +183,7 @@ export class TreeFileComponent {
                             const dirNode: FileSystemNode = {
                                 id: parseInt(dirId, 10),
                                 name: (dir as any).name,
-                                type: 'D',
+                                type: "D",
                                 children: [],
                             };
 
@@ -209,7 +209,7 @@ export class TreeFileComponent {
                                                 children.push({
                                                     id: parseInt(fileId, 10),
                                                     name: file.name,
-                                                    type: 'F',
+                                                    type: "F",
                                                 });
                                             }
                                         }
@@ -218,7 +218,7 @@ export class TreeFileComponent {
                                     }),
                                     catchError((err) => {
                                         console.error(
-                                            'Error loading directory content for:',
+                                            "Error loading directory content for:",
                                             dirNode.name,
                                             err,
                                         );
@@ -238,7 +238,7 @@ export class TreeFileComponent {
                             rootNodes.push({
                                 id: parseInt(fileId, 10),
                                 name: file.name,
-                                type: 'F',
+                                type: "F",
                             });
                         }
                     }
@@ -266,7 +266,7 @@ export class TreeFileComponent {
      * @returns A unique string key.
      */
     private getNodeKey(node: ExampleFlatNode): string {
-        return `${node.expandable ? 'D' : 'F'}-${node.id}`;
+        return `${node.expandable ? "D" : "F"}-${node.id}`;
     }
 
     /**
@@ -309,13 +309,13 @@ export class TreeFileComponent {
      * This is useful for providing visual feedback to the user.
      */
     showLoading(): void {
-        document.body.classList.add('loading');
+        document.body.classList.add("loading");
     }
 
     /**
      * Removes the 'loading' class from the body.
      */
     removeLoading(): void {
-        document.body.classList.remove('loading');
+        document.body.classList.remove("loading");
     }
 }
