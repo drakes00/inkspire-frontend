@@ -245,4 +245,67 @@ describe("TreeFileComponent", () => {
         // After selection.
         expect(nodeElement.classList.contains("selected-node")).toBeTrue();
     });
+
+    // ------------------------------------
+    // Creation Actions & Modal
+    // ------------------------------------
+
+    describe("Creation Actions & Modal", () => {
+        it("should open modal for root file creation", () => {
+            component.handleCreateFile(null);
+            expect(component.isModalVisible).toBeTrue();
+            expect(component.modalTitle).toBe("Create New File");
+            expect(component.modalShowContext).toBeFalse();
+            expect(component.creationDirectoryId).toBe(null);
+        });
+
+        it("should open modal for file creation", () => {
+            component.handleCreateFile(123);
+            expect(component.isModalVisible).toBeTrue();
+            expect(component.modalTitle).toBe("Create New File");
+            expect(component.modalShowContext).toBeFalse();
+            expect(component.creationDirectoryId).toBe(123);
+        });
+
+        it("should open modal for directory creation", () => {
+            component.handleCreateDirectory(null);
+            expect(component.isModalVisible).toBeTrue();
+            expect(component.modalTitle).toBe("Create New Directory");
+            expect(component.modalShowContext).toBeTrue();
+            expect(component.creationDirectoryId).toBeNull();
+        });
+
+        it("should handle modal validation for a new file", () => {
+            component.creationDirectoryId = 1;
+            component.modalShowContext = false; // for file
+            const event = { name: "new-file.txt", context: "" };
+            component.onCreationModalValidate(event);
+
+            expect(component.isModalVisible).toBeFalse();
+
+            // TODO: Test file creation handling using FileManagerService.
+            expect(false).toBeTrue();
+
+            // TODO: Do not forget to test both root and nested files.
+        });
+
+        it("should handle modal validation for a new directory", () => {
+            spyOn(console, "log");
+            component.creationDirectoryId = null;
+            component.modalShowContext = true; // for directory
+            const event = { name: "new-dir", context: "new context" };
+            component.onCreationModalValidate(event);
+
+            expect(component.isModalVisible).toBeFalse();
+
+            // TODO: Test directory creation handling using FileManagerService.
+            expect(false).toBeTrue();
+        });
+
+        it("should close modal", () => {
+            component.isModalVisible = true;
+            component.closeCreationModal();
+            expect(component.isModalVisible).toBeFalse();
+        });
+    });
 });

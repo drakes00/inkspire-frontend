@@ -259,7 +259,7 @@ export class TextComponent implements OnInit, OnDestroy {
      * async function that handle the user query and call ollama to translate the text accordingly to the language choosen 
      * @param data 
      */
-    async handleModalTranslationSubmit(data: { text: string }) {
+    async handleModalTranslationSubmit(data: { name: string, context: string }) {
         if (this.text == undefined || this.text == null || this.text == "") {
             console.error("Text is empty");
             return;
@@ -272,7 +272,7 @@ export class TextComponent implements OnInit, OnDestroy {
             let context = JSON.parse(getContext);
             let result = null;
 
-            if (data.text == undefined || data.text == null || data.text == "") {
+            if (data.name == undefined || data.name == null || data.name == "") {
                 console.error("Text is empty");
                 return;
             } else if (tokenUser) {
@@ -283,7 +283,7 @@ export class TextComponent implements OnInit, OnDestroy {
                     textToProcess = this.text;
                 }
                 this.showLoading()
-                result = await this.ollamaService.translateButtonOllama(this.currentFileID, tokenUser!, data.text, context, textToProcess);
+                result = await this.ollamaService.translateButtonOllama(this.currentFileID, tokenUser!, data.name, context, textToProcess);
                 this.removeLoading()
                 if (result) {
                     let res = JSON.parse(result);
@@ -312,7 +312,7 @@ export class TextComponent implements OnInit, OnDestroy {
      * async function to handle the modal add submit and send text to ollama
      * @param data
      */
-    async handleModalAddSubmit(data: { text: string }) {
+    async handleModalAddSubmit(data: { name: string, context: string }) {
         if (this.text == undefined || this.text == null || this.text == "") {
             console.error("Text is empty");
             return;
@@ -325,7 +325,7 @@ export class TextComponent implements OnInit, OnDestroy {
             let context = JSON.parse(getContext);
             let result = null;
 
-            if (data.text == undefined || data.text == null || data.text == "") {
+            if (data.name == undefined || data.name == null || data.name == "") {
                 console.error("Text is empty");
                 return;
             } else if (tokenUser) {
@@ -336,7 +336,7 @@ export class TextComponent implements OnInit, OnDestroy {
                     textToProcess = this.text;
                 }
                 this.showLoading()
-                result = await this.ollamaService.addButtonOllama(this.currentFileID, tokenUser!, data.text, context, textToProcess);
+                result = await this.ollamaService.addButtonOllama(this.currentFileID, tokenUser!, data.name, context, textToProcess);
                 this.removeLoading()
                 if (result) {
                     let res = JSON.parse(result);

@@ -83,13 +83,16 @@
         </mat-tree-node>
     </mat-tree>
 
+    <!--
+        Modal allowing to show dialog fore file and directory actions (creation, deletion, etc).
+    -->
     @if (isModalVisible) {
-        <app-modal-choice 
+        <app-modal
             [title]="modalTitle"
-            [itemType]="modalItemType"
+            [showContext]="modalShowContext"
             [isVisible]="isModalVisible"
             (close)="closeCreationModal()"
             (validate)="onCreationModalValidate($event)">
-        </app-modal-choice>
+        </app-modal>
     }
 </div>

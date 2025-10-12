@@ -1,33 +1,39 @@
-import { Component, EventEmitter, Output, Input } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges } from "@angular/core";
+import { FormsModule } from "@angular/forms";
 
 @Component({
-    selector: 'app-modal',
+    selector: "app-modal",
     imports: [FormsModule],
-    templateUrl: './modal.component.html',
-    styleUrl: './modal.component.css'
+    templateUrl: "./modal.component.html",
+    styleUrl: "./modal.component.css",
 })
-export class ModalComponent {
-  @Output() close = new EventEmitter<void>();
-  @Input() title: string = 'Title';
-  @Input() isVisible: boolean = false;
-  @Output() validate = new EventEmitter<{text: string}>();
-  @Input() confirmText: string = 'Validate';
-  @Input() cancelText: string = 'Cancel';
-  @Input() showTextarea: boolean = true;
-  textValue: string = '';
+export class ModalComponent implements OnChanges {
+    @Output() close = new EventEmitter<void>();
+    @Input() title: string = "Enter Name";
+    @Input() isVisible: boolean = false;
+    @Input() showContext: boolean = false;
 
-  validateModal(): void {
-      this.validate.emit({
-      text: this.textValue
-    });
-      this.isVisible = false;
-      this.close.emit()
+    @Output() validate = new EventEmitter<{ name: string; context: string }>();
 
+    nameValue: string = "";
+    context: string = "";
+
+    ngOnChanges(changes: SimpleChanges): void {
+        if (changes["isVisible"] && this.isVisible) {
+            // Reset fields when modal becomes visible
+            this.nameValue = "";
+            this.context = "";
+        }
     }
-    
+
+    validateModal(): void {
+        this.validate.emit({
+            name: this.nameValue,
+            context: this.context,
+        });
+    }
+
     closeModal(): void {
-      this.close.emit();
+        this.close.emit();
     }
-
 }

@@ -8,7 +8,7 @@ import { MatMenuModule } from "@angular/material/menu";
 import { forkJoin, of } from "rxjs";
 import { catchError, map, switchMap } from "rxjs/operators";
 
-import { ModalChoiceComponent } from "../modal-choice/modal-choice.component";
+import { ModalComponent } from "../modal/modal.component";
 import { ModalEditComponent } from "../modal-edit/modal-edit.component";
 import { FilesManagerService } from "../../services/files-manager.service";
 import { SharedFilesService } from "../../services/shared-files.service";
@@ -39,7 +39,7 @@ interface FileSystemNode {
  */
 @Component({
     selector: "app-tree-file",
-    imports: [MatTreeModule, MatButtonModule, MatIconModule, MatMenuModule, ModalChoiceComponent, ModalEditComponent],
+    imports: [MatTreeModule, MatButtonModule, MatIconModule, MatMenuModule, ModalComponent, ModalEditComponent],
     templateUrl: "./tree-file.component.html",
     styleUrls: ["./tree-file.component.css"],
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -89,8 +89,8 @@ export class TreeFileComponent {
     /** The title for the creation modal. */
     modalTitle = "";
 
-    /** The type of item to be created in the modal ('file' or 'directory'). */
-    modalItemType: "file" | "directory" = "file";
+    /** Whether to show the context textarea in the modal. */
+    modalShowContext = false;
 
     /** The ID of the parent directory for the new item creation. */
     creationDirectoryId: number | null = null;
@@ -267,7 +267,7 @@ export class TreeFileComponent {
      */
     handleCreateFile(directoryId: number | null = null): void {
         this.modalTitle = "Create New File";
-        this.modalItemType = "file";
+        this.modalShowContext = false;
         this.creationDirectoryId = directoryId;
         this.isModalVisible = true;
         this.cdr.markForCheck();
@@ -279,7 +279,7 @@ export class TreeFileComponent {
      */
     handleCreateDirectory(directoryId: number | null = null): void {
         this.modalTitle = "Create New Directory";
-        this.modalItemType = "directory";
+        this.modalShowContext = true;
         this.creationDirectoryId = directoryId;
         this.isModalVisible = true;
         this.cdr.markForCheck();
@@ -306,12 +306,13 @@ export class TreeFileComponent {
      * Handles the validation event from the creation modal.
      * @param event The event payload from the modal.
      */
-    onCreationModalValidate(event: { name: string; type: string; context: string }): void {
+    onCreationModalValidate(event: { name: string; context: string }): void {
         this.isModalVisible = false;
+        const type = this.modalShowContext ? "directory" : "file";
         console.log(
-            `Creating ${event.type} with name "${event.name}" in directory ID: ${this.creationDirectoryId === null ? "root" : this.creationDirectoryId}`,
+            `Creating ${type} with name "${event.name}" in directory ID: ${this.creationDirectoryId === null ? "root" : this.creationDirectoryId}`,
         );
-        if (event.type === "directory") {
+        if (type === "directory") {
             console.log(`With context: ${event.context}`);
         }
         // Here we would call the FilesManagerService
