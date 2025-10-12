@@ -321,16 +321,34 @@ export class TreeFileComponent {
      */
     onCreationModalValidate(event: { name: string; context: string }): void {
         this.isModalVisible = false;
-        const type = this.modalShowContext ? "directory" : "file";
-        console.log(
-            `Creating ${type} with name "${event.name}" in directory ID: ${this.creationDirectoryId === null ? "root" : this.creationDirectoryId}`,
-        );
-        if (type === "directory") {
-            console.log(`With context: ${event.context}`);
+        const token = localStorage.getItem("token");
+        if (!token) {
+            console.error("No token found, cannot create item.");
+            return;
         }
-        // Here we would call the FilesManagerService
-        // e.g. this.filesManagerService.addFile(token, event.name, this.creationDirectoryId);
-        // And then call this.updateTree() on success.
+
+        const type = this.modalShowContext ? "directory" : "file";
+
+        if (type === "file") {
+            this.filesManagerService.addFile(token, event.name, this.creationDirectoryId).subscribe({
+                next: () => {
+                    this.updateTree();
+                },
+                error: (err) => {
+                    console.error("Error creating file:", err);
+                },
+            });
+        } else {
+            // type === 'directory'
+            this.filesManagerService.addDir(token, event.name, this.creationDirectoryId).subscribe({
+                next: () => {
+                    this.updateTree();
+                },
+                error: (err) => {
+                    console.error("Error creating directory:", err);
+                },
+            });
+        }
     }
 
     // --------------------  UTILITIES  ---------------------------------

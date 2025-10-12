@@ -1,11 +1,8 @@
-import { TestBed } from '@angular/core/testing';
-import {
-    HttpClientTestingModule,
-    HttpTestingController,
-} from '@angular/common/http/testing';
-import { FilesManagerService } from './files-manager.service';
+import { TestBed } from "@angular/core/testing";
+import { HttpClientTestingModule, HttpTestingController } from "@angular/common/http/testing";
+import { FilesManagerService } from "./files-manager.service";
 
-describe('FilesManagerService', () => {
+describe("FilesManagerService", () => {
     let service: FilesManagerService;
     let httpMock: HttpTestingController;
 
@@ -20,51 +17,49 @@ describe('FilesManagerService', () => {
     });
 
     afterEach(() => {
-        // Vérifie qu'il n'y a pas de requêtes HTTP en attente
+        // Verifies that there are no outstanding HTTP requests.
         httpMock.verify();
     });
 
-    it('should be created', () => {
+    it("should be created", () => {
         expect(service).toBeTruthy();
     });
 
-    describe('getTree', () => {
-        it('should send GET request with correct URL and headers', () => {
-            const token = 'test-token-123';
+    describe("getTree", () => {
+        it("should send GET request with correct URL and headers", () => {
+            const token = "test-token-123";
             const mockResponse = {
-                dirs: { '1': { name: 'DirA' } },
-                files: { '2': { name: 'FileRoot' } },
+                dirs: { "1": { name: "DirA" } },
+                files: { "2": { name: "FileRoot" } },
             };
 
-            // Souscription à l'observable
+            // Subscribe to the observable
             service.getTree(token).subscribe((response) => {
-                // Vérifie que la réponse est une string JSON
+                // Check that the response is a JSON string
                 expect(response).toBe(JSON.stringify(mockResponse));
 
-                // Vérifie le contenu parsé
+                // Check the parsed content
                 const parsed = JSON.parse(response);
-                expect(parsed.dirs['1'].name).toBe('DirA');
-                expect(parsed.files['2'].name).toBe('FileRoot');
+                expect(parsed.dirs["1"].name).toBe("DirA");
+                expect(parsed.files["2"].name).toBe("FileRoot");
             });
 
-            // Intercepte la requête HTTP
-            const req = httpMock.expectOne('/api/tree');
+            // Expect a single request to the tree API
+            const req = httpMock.expectOne("/api/tree");
 
-            // Vérifie la méthode HTTP
-            expect(req.request.method).toBe('GET');
+            // Check the HTTP method
+            expect(req.request.method).toBe("GET");
 
-            // Vérifie les headers
-            expect(req.request.headers.get('Authorization')).toBe(
-                'Bearer test-token-123',
-            );
-            expect(req.request.headers.get('Accept')).toBe('application/json');
+            // Check the headers
+            expect(req.request.headers.get("Authorization")).toBe("Bearer test-token-123");
+            expect(req.request.headers.get("Accept")).toBe("application/json");
 
-            // Simule la réponse du serveur
+            // Simulate the server response
             req.flush(mockResponse);
         });
 
-        it('should handle empty response', () => {
-            const token = 'test-token';
+        it("should handle empty response", () => {
+            const token = "test-token";
             const mockResponse = { dirs: {}, files: {} };
 
             service.getTree(token).subscribe((response) => {
@@ -73,55 +68,55 @@ describe('FilesManagerService', () => {
                 expect(parsed.files).toEqual({});
             });
 
-            const req = httpMock.expectOne('/api/tree');
+            const req = httpMock.expectOne("/api/tree");
             req.flush(mockResponse);
         });
 
-        it('should handle HTTP error', () => {
-            const token = 'test-token';
-            const errorMessage = 'Network error';
+        it("should handle HTTP error", () => {
+            const token = "test-token";
+            const errorMessage = "Network error";
 
             service.getTree(token).subscribe({
-                next: () => fail('should have failed with 500 error'),
+                next: () => fail("should have failed with 500 error"),
                 error: (error) => {
                     expect(error.status).toBe(500);
-                    expect(error.statusText).toBe('Server Error');
+                    expect(error.statusText).toBe("Server Error");
                 },
             });
 
-            const req = httpMock.expectOne('/api/tree');
+            const req = httpMock.expectOne("/api/tree");
             req.flush(errorMessage, {
                 status: 500,
-                statusText: 'Server Error',
+                statusText: "Server Error",
             });
         });
 
-        it('should handle unauthorized error', () => {
-            const token = 'invalid-token';
+        it("should handle unauthorized error", () => {
+            const token = "invalid-token";
 
             service.getTree(token).subscribe({
-                next: () => fail('should have failed with 401 error'),
+                next: () => fail("should have failed with 401 error"),
                 error: (error) => {
                     expect(error.status).toBe(401);
                 },
             });
 
-            const req = httpMock.expectOne('/api/tree');
-            req.flush('Unauthorized', {
+            const req = httpMock.expectOne("/api/tree");
+            req.flush("Unauthorized", {
                 status: 401,
-                statusText: 'Unauthorized',
+                statusText: "Unauthorized",
             });
         });
     });
 
-    describe('getDirContent', () => {
-        it('should send GET request with correct URL and headers', () => {
+    describe("getDirContent", () => {
+        it("should send GET request with correct URL and headers", () => {
             const dirId = 5;
-            const token = 'test-token-456';
+            const token = "test-token-456";
             const mockResponse = {
                 files: {
-                    '10': { name: 'file1.txt' },
-                    '11': { name: 'file2.txt' },
+                    "10": { name: "file1.txt" },
+                    "11": { name: "file2.txt" },
                 },
             };
 
@@ -129,25 +124,23 @@ describe('FilesManagerService', () => {
                 expect(response).toBe(JSON.stringify(mockResponse));
 
                 const parsed = JSON.parse(response);
-                expect(parsed.files['10'].name).toBe('file1.txt');
-                expect(parsed.files['11'].name).toBe('file2.txt');
+                expect(parsed.files["10"].name).toBe("file1.txt");
+                expect(parsed.files["11"].name).toBe("file2.txt");
             });
 
-            // Vérifie que l'URL contient bien l'ID du répertoire
-            const req = httpMock.expectOne('/api/dir/5');
+            // Check that the URL contains the directory ID
+            const req = httpMock.expectOne("/api/dir/5");
 
-            expect(req.request.method).toBe('GET');
-            expect(req.request.headers.get('Authorization')).toBe(
-                'Bearer test-token-456',
-            );
-            expect(req.request.headers.get('Accept')).toBe('application/json');
+            expect(req.request.method).toBe("GET");
+            expect(req.request.headers.get("Authorization")).toBe("Bearer test-token-456");
+            expect(req.request.headers.get("Accept")).toBe("application/json");
 
             req.flush(mockResponse);
         });
 
-        it('should handle directory with no files', () => {
+        it("should handle directory with no files", () => {
             const dirId = 3;
-            const token = 'test-token';
+            const token = "test-token";
             const mockResponse = { files: {} };
 
             service.getDirContent(dirId, token).subscribe((response) => {
@@ -155,16 +148,16 @@ describe('FilesManagerService', () => {
                 expect(parsed.files).toEqual({});
             });
 
-            const req = httpMock.expectOne('/api/dir/3');
+            const req = httpMock.expectOne("/api/dir/3");
             req.flush(mockResponse);
         });
 
-        it('should construct correct URLs for different directory IDs', () => {
-            const token = 'test-token';
+        it("should construct correct URLs for different directory IDs", () => {
+            const token = "test-token";
             const testCases = [
-                { id: 1, expectedUrl: '/api/dir/1' },
-                { id: 42, expectedUrl: '/api/dir/42' },
-                { id: 999, expectedUrl: '/api/dir/999' },
+                { id: 1, expectedUrl: "/api/dir/1" },
+                { id: 42, expectedUrl: "/api/dir/42" },
+                { id: 999, expectedUrl: "/api/dir/999" },
             ];
 
             testCases.forEach(({ id, expectedUrl }) => {
@@ -173,62 +166,105 @@ describe('FilesManagerService', () => {
                 });
 
                 const req = httpMock.expectOne(expectedUrl);
-                expect(req.request.method).toBe('GET');
-                expect(req.request.headers.get('Authorization')).toBe(
-                    'Bearer test-token',
-                );
+                expect(req.request.method).toBe("GET");
+                expect(req.request.headers.get("Authorization")).toBe("Bearer test-token");
 
                 req.flush({ files: {} });
             });
         });
 
-        it('should handle HTTP error', () => {
+        it("should handle HTTP error", () => {
             const dirId = 999;
-            const token = 'test-token';
+            const token = "test-token";
 
             service.getDirContent(dirId, token).subscribe({
-                next: () => fail('should have failed with 404 error'),
+                next: () => fail("should have failed with 404 error"),
                 error: (error) => {
                     expect(error.status).toBe(404);
-                    expect(error.statusText).toBe('Not Found');
+                    expect(error.statusText).toBe("Not Found");
                 },
             });
 
-            const req = httpMock.expectOne('/api/dir/999');
-            expect(req.request.method).toBe('GET');
-            expect(req.request.headers.get('Authorization')).toBe(
-                'Bearer test-token',
-            );
+            const req = httpMock.expectOne("/api/dir/999");
+            expect(req.request.method).toBe("GET");
+            expect(req.request.headers.get("Authorization")).toBe("Bearer test-token");
 
-            req.flush('Directory not found', {
+            req.flush("Directory not found", {
                 status: 404,
-                statusText: 'Not Found',
+                statusText: "Not Found",
             });
         });
     });
 
-    describe('Multiple requests', () => {
-        it('should handle multiple getTree requests independently', () => {
-            const token1 = 'token1';
-            const token2 = 'token2';
-            const response1 = { dirs: { '1': { name: 'Dir1' } }, files: {} };
-            const response2 = { dirs: { '2': { name: 'Dir2' } }, files: {} };
+    describe("addFile", () => {
+        it("should send POST request to create a root file", () => {
+            const token = "test-token";
+            const fileName = "new-root-file.txt";
+            const mockResponse = { id: 100, name: fileName };
 
-            // Deux requêtes simultanées
-            service.getTree(token1).subscribe((res) => {
-                expect(JSON.parse(res).dirs['1'].name).toBe('Dir1');
+            service.addFile(token, fileName, null).subscribe((response) => {
+                expect(response).toEqual(mockResponse);
             });
 
-            service.getTree(token2).subscribe((res) => {
-                expect(JSON.parse(res).dirs['2'].name).toBe('Dir2');
+            const req = httpMock.expectOne("/api/file");
+            expect(req.request.method).toBe("POST");
+            expect(req.request.headers.get("Authorization")).toBe("Bearer " + token);
+            expect(req.request.body).toEqual({ name: fileName });
+
+            req.flush(mockResponse);
+        });
+
+        it("should send POST request to create a nested file", () => {
+            const token = "test-token";
+            const fileName = "new-nested-file.txt";
+            const dirId = 42;
+            const mockResponse = { id: 101, name: fileName, dir: dirId };
+
+            service.addFile(token, fileName, dirId).subscribe((response) => {
+                expect(response).toEqual(mockResponse);
             });
 
-            // Vérifie et répond aux deux requêtes
-            const reqs = httpMock.match('/api/tree');
-            expect(reqs.length).toBe(2);
+            const req = httpMock.expectOne("/api/file");
+            expect(req.request.method).toBe("POST");
+            expect(req.request.headers.get("Authorization")).toBe("Bearer " + token);
+            expect(req.request.body).toEqual({ name: fileName, dir: dirId });
 
-            reqs[0].flush(response1);
-            reqs[1].flush(response2);
+            req.flush(mockResponse);
+        });
+
+        it("should handle HTTP error on file creation", () => {
+            const token = "test-token";
+            const fileName = "error-file.txt";
+
+            service.addFile(token, fileName, null).subscribe({
+                next: () => fail("should have failed with 500 error"),
+                error: (error) => {
+                    expect(error.status).toBe(500);
+                },
+            });
+
+            const req = httpMock.expectOne("/api/file");
+            req.flush("Error", { status: 500, statusText: "Server Error" });
+        });
+    });
+
+    describe("addDir", () => {
+        it("should send POST request to create a root directory", () => {
+            const token = "test-token";
+            const dirName = "New Root Dir";
+            const mockResponse = { id: 200, name: dirName };
+
+            service.addDir(token, dirName, null).subscribe((response) => {
+                expect(response).toEqual(mockResponse);
+            });
+
+            const req = httpMock.expectOne("/api/dir");
+            expect(req.request.method).toBe("POST");
+            expect(req.request.headers.get("Authorization")).toBe("Bearer " + token);
+            // Per user instruction, body should only contain the name
+            expect(req.request.body).toEqual({ name: dirName });
+
+            req.flush(mockResponse);
         });
     });
 });

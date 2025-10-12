@@ -26,6 +26,9 @@ class MockFilesManagerService {
         }
         return of(JSON.stringify({ files: {} }));
     });
+
+    addFile = jasmine.createSpy("addFile").and.returnValue(of({}));
+    addDir = jasmine.createSpy("addDir").and.returnValue(of({}));
 }
 
 // Mock implementation of SharedFilesService for isolated testing.
@@ -246,33 +249,33 @@ describe("TreeFileComponent", () => {
         expect(nodeElement.classList.contains("selected-node")).toBeTrue();
     });
 
-    it('should keep node actions menu visible when open', () => {
+    it("should keep node actions menu visible when open", () => {
         // Populate data with a directory
-        component.dataSource.data = [{ id: 1, name: 'DirA', type: 'D' }];
+        component.dataSource.data = [{ id: 1, name: "DirA", type: "D" }];
         fixture.detectChanges();
 
-        const dirNodeElement = fixture.nativeElement.querySelector('.mdc-tree-node');
-        const nodeActionsElement = dirNodeElement.querySelector('.node-actions');
+        const dirNodeElement = fixture.nativeElement.querySelector(".mdc-tree-node");
+        const nodeActionsElement = dirNodeElement.querySelector(".node-actions");
         const dirNode = component.treeControl.dataNodes[0];
 
         // Initially, actions should be hidden
-        expect(getComputedStyle(nodeActionsElement).visibility).toBe('hidden');
+        expect(getComputedStyle(nodeActionsElement).visibility).toBe("hidden");
 
         // --- Open menu ---
-        component.onDirMenuOpen(dirNode, new MouseEvent('click'));
+        component.onDirMenuOpen(dirNode, new MouseEvent("click"));
         fixture.detectChanges();
 
         // Actions should become visible because of the .menu-open class
-        expect(getComputedStyle(nodeActionsElement).visibility).toBe('visible');
-        expect(dirNodeElement.classList.contains('menu-open')).toBeTrue();
+        expect(getComputedStyle(nodeActionsElement).visibility).toBe("visible");
+        expect(dirNodeElement.classList.contains("menu-open")).toBeTrue();
 
         // --- Close menu ---
         component.onDirMenuClose();
         fixture.detectChanges();
 
         // Actions should become hidden again
-        expect(getComputedStyle(nodeActionsElement).visibility).toBe('hidden');
-        expect(dirNodeElement.classList.contains('menu-open')).toBeFalse();
+        expect(getComputedStyle(nodeActionsElement).visibility).toBe("hidden");
+        expect(dirNodeElement.classList.contains("menu-open")).toBeFalse();
     });
 
     // ------------------------------------
@@ -280,6 +283,11 @@ describe("TreeFileComponent", () => {
     // ------------------------------------
 
     describe("Creation Actions & Modal", () => {
+        beforeEach(() => {
+            spyOn(localStorage, "getItem").and.returnValue("test-token");
+            spyOn(component, "updateTree"); // Spy on updateTree to check if it's called
+        });
+
         it("should open modal for root file creation", () => {
             component.handleCreateFile(null);
             expect(component.isModalVisible).toBeTrue();
@@ -304,31 +312,63 @@ describe("TreeFileComponent", () => {
             expect(component.creationDirectoryId).toBeNull();
         });
 
-        it("should handle modal validation for a new file", () => {
-            component.creationDirectoryId = 1;
-            component.modalShowContext = false; // for file
-            const event = { name: "new-file.txt", context: "" };
+        it("should call addFile service and update tree when creating a root file", () => {
+            component.creationDirectoryId = null;
+            component.modalShowContext = false; // It's a file
+
+            const event = { name: "new-root-file.txt", context: "" };
             component.onCreationModalValidate(event);
 
-            expect(component.isModalVisible).toBeFalse();
-
-            // TODO: Test file creation handling using FileManagerService.
-            expect(false).toBeTrue();
-
-            // TODO: Do not forget to test both root and nested files.
+            expect(mockFilesManagerService.addFile).toHaveBeenCalledWith("test-token", "new-root-file.txt", null);
+            expect(component.updateTree).toHaveBeenCalled();
         });
 
-        it("should handle modal validation for a new directory", () => {
-            spyOn(console, "log");
-            component.creationDirectoryId = null;
-            component.modalShowContext = true; // for directory
-            const event = { name: "new-dir", context: "new context" };
+        it("should call addFile service and update tree when creating a nested file", () => {
+            component.creationDirectoryId = 42;
+            component.modalShowContext = false; // It's a file
+
+            const event = { name: "new-nested-file.txt", context: "" };
             component.onCreationModalValidate(event);
 
-            expect(component.isModalVisible).toBeFalse();
+            expect(mockFilesManagerService.addFile).toHaveBeenCalledWith("test-token", "new-nested-file.txt", 42);
+            expect(component.updateTree).toHaveBeenCalled();
+        });
 
-            // TODO: Test directory creation handling using FileManagerService.
-            expect(false).toBeTrue();
+        it("should call addDir service and update tree when creating a root directory", () => {
+            component.creationDirectoryId = null;
+            component.modalShowContext = true; // It's a directory
+
+            const event = { name: "new-root-dir", context: "some context" };
+            component.onCreationModalValidate(event);
+
+            expect(mockFilesManagerService.addDir).toHaveBeenCalledWith("test-token", "new-root-dir", null);
+            expect(component.updateTree).toHaveBeenCalled();
+        });
+
+        it("should log an error if file creation fails", () => {
+            mockFilesManagerService.addFile.and.returnValue(throwError(() => new Error("Creation failed")));
+            spyOn(console, "error");
+
+            component.creationDirectoryId = 1;
+            component.modalShowContext = false;
+            const event = { name: "fail.txt", context: "" };
+            component.onCreationModalValidate(event);
+
+            expect(component.updateTree).not.toHaveBeenCalled();
+            expect(console.error).toHaveBeenCalledWith("Error creating file:", jasmine.any(Error));
+        });
+
+        it("should log an error if directory creation fails", () => {
+            mockFilesManagerService.addDir.and.returnValue(throwError(() => new Error("Creation failed")));
+            spyOn(console, "error");
+
+            component.creationDirectoryId = 1;
+            component.modalShowContext = true;
+            const event = { name: "fail-dir", context: "" };
+            component.onCreationModalValidate(event);
+
+            expect(component.updateTree).not.toHaveBeenCalled();
+            expect(console.error).toHaveBeenCalledWith("Error creating directory:", jasmine.any(Error));
         });
 
         it("should close modal", () => {
