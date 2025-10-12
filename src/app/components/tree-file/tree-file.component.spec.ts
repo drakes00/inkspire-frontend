@@ -246,6 +246,35 @@ describe("TreeFileComponent", () => {
         expect(nodeElement.classList.contains("selected-node")).toBeTrue();
     });
 
+    it('should keep node actions menu visible when open', () => {
+        // Populate data with a directory
+        component.dataSource.data = [{ id: 1, name: 'DirA', type: 'D' }];
+        fixture.detectChanges();
+
+        const dirNodeElement = fixture.nativeElement.querySelector('.mdc-tree-node');
+        const nodeActionsElement = dirNodeElement.querySelector('.node-actions');
+        const dirNode = component.treeControl.dataNodes[0];
+
+        // Initially, actions should be hidden
+        expect(getComputedStyle(nodeActionsElement).visibility).toBe('hidden');
+
+        // --- Open menu ---
+        component.onDirMenuOpen(dirNode, new MouseEvent('click'));
+        fixture.detectChanges();
+
+        // Actions should become visible because of the .menu-open class
+        expect(getComputedStyle(nodeActionsElement).visibility).toBe('visible');
+        expect(dirNodeElement.classList.contains('menu-open')).toBeTrue();
+
+        // --- Close menu ---
+        component.onDirMenuClose();
+        fixture.detectChanges();
+
+        // Actions should become hidden again
+        expect(getComputedStyle(nodeActionsElement).visibility).toBe('hidden');
+        expect(dirNodeElement.classList.contains('menu-open')).toBeFalse();
+    });
+
     // ------------------------------------
     // Creation Actions & Modal
     // ------------------------------------

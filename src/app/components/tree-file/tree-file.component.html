@@ -44,6 +44,7 @@
             *matTreeNodeDef="let node; when: hasChild"
             class="mdc-tree-node"
             [class.selected-node]="isSelected(node)"
+            [class.menu-open]="menuOpenForNode === node.id"
             (click)="selectNode(node)"
         >
             <div class="mdc-tree-node-content">
@@ -53,7 +54,7 @@
                 <mat-icon>folder</mat-icon>
                 <span class="node-name"> {{node.name}}</span>
                 <span class="node-actions">
-                    <button mat-icon-button [matMenuTriggerFor]="dirActionsMenu" (click)="onDirMenuOpen(node, $event)" aria-label="Open directory actions menu">
+                    <button mat-icon-button [matMenuTriggerFor]="dirActionsMenu" (menuClosed)="onDirMenuClose()" (click)="onDirMenuOpen(node, $event)" aria-label="Open directory actions menu">
                         <mat-icon>more_vert</mat-icon>
                     </button>
                 </span>

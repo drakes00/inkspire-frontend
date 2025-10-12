@@ -56,6 +56,9 @@ export class TreeFileComponent {
     /** The node that the context menu is opened for. */
     contextNode: ExampleFlatNode | null = null;
 
+    /** The ID of the node for which the menu is currently open. */
+    menuOpenForNode: number | null = null;
+
     /** Transforms a `FileSystemNode` to a `ExampleFlatNode`. This is used by the tree flattener. */
     private _transformer = (node: FileSystemNode, level: number): ExampleFlatNode => ({
         id: node.id,
@@ -286,13 +289,23 @@ export class TreeFileComponent {
     }
 
     /**
-     * Sets the context node for the directory actions menu.
+     * Sets the context node and open state for the directory actions menu.
      * @param node The node for which the menu is opened.
      * @param event The mouse event.
      */
     onDirMenuOpen(node: ExampleFlatNode, event: MouseEvent): void {
         event.stopPropagation();
         this.contextNode = node;
+        this.menuOpenForNode = node.id;
+        this.cdr.markForCheck();
+    }
+
+    /**
+     * Clears the open menu state when a menu is closed.
+     */
+    onDirMenuClose(): void {
+        this.menuOpenForNode = null;
+        this.cdr.markForCheck();
     }
 
     /**

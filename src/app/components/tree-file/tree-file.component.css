@@ -77,7 +77,8 @@
     visibility: hidden;
 }
 
-.mdc-tree-node:hover .node-actions {
+.mdc-tree-node:hover .node-actions,
+.mdc-tree-node.menu-open .node-actions {
     visibility: visible;
 }
 
