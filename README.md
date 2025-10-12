@@ -83,9 +83,9 @@ It is provided *as is*, without warranty, but every effort is made to ensure cod
 
 InkSpire is based on a code developped by:
 
-- Evann Abrial
-- Lola Chalmin
-- Roxane Rossetto
+- [Evann Abrial](https://www.linkedin.com/in/evann-abrial-26b446297/)
+- [Lola Chalmin](https://www.linkedin.com/in/lola-chalmin-112ab9290/)
+- [Roxane Rossetto](https://www.linkedin.com/in/roxane-rossetto-3b9158211/)
 
 ---
 
