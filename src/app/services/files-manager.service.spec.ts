@@ -252,9 +252,10 @@ describe("FilesManagerService", () => {
         it("should send POST request to create a root directory", () => {
             const token = "test-token";
             const dirName = "New Root Dir";
+            const dirContext = "New Dir Context";
             const mockResponse = { id: 200, name: dirName };
 
-            service.addDir(token, dirName, null).subscribe((response) => {
+            service.addDir(token, dirName, dirContext, null).subscribe((response) => {
                 expect(response).toEqual(mockResponse);
             });
 
@@ -262,7 +263,7 @@ describe("FilesManagerService", () => {
             expect(req.request.method).toBe("POST");
             expect(req.request.headers.get("Authorization")).toBe("Bearer " + token);
             // Per user instruction, body should only contain the name
-            expect(req.request.body).toEqual({ name: dirName });
+            expect(req.request.body).toEqual({ name: dirName, summary: dirContext });
 
             req.flush(mockResponse);
         });
