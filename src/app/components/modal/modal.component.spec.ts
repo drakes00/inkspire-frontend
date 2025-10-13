@@ -41,7 +41,7 @@ describe("ModalComponent", () => {
         spyOn(component.validate, "emit");
 
         component.nameValue = "MyNewItem";
-        component.context = "My context";
+        component.contextValue = "My context";
         fixture.detectChanges();
 
         const validateButton = fixture.nativeElement.querySelector("button");
@@ -54,7 +54,7 @@ describe("ModalComponent", () => {
     });
 
     it("should reset form fields when it becomes visible", () => {
-        component.nameValue = "Old Name";
+        component.name = "Old Name";
         component.context = "Old Context";
 
         component.isVisible = true;
@@ -63,7 +63,11 @@ describe("ModalComponent", () => {
         });
         fixture.detectChanges();
 
-        expect(component.nameValue).toBe("");
-        expect(component.context).toBe("");
+        expect(component.nameValue).toBe("Old Name");
+        expect(component.contextValue).toBe("Old Context");
+
+        // Reset for the next test
+        component.name = "";
+        component.context = "";
     });
 });

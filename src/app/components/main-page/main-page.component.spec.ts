@@ -1,6 +1,10 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { MainPageComponent } from './main-page.component';
+import { TreeFileComponent } from '../tree-file/tree-file.component';
+import { TextComponent } from '../text-component/text-component.component';
+
+import { HttpClientTestingModule } from '@angular/common/http/testing';
 
 describe('MainPageComponent', () => {
   let component: MainPageComponent;
@@ -8,7 +12,7 @@ describe('MainPageComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [MainPageComponent]
+      imports: [MainPageComponent, TreeFileComponent, TextComponent, HttpClientTestingModule]
     })
     .compileComponents();
     

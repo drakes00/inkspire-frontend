@@ -34,6 +34,18 @@
             <mat-icon>note_add</mat-icon>
             <span>New File</span>
         </button>
+        <button mat-menu-item (click)="handleEdit(contextNode!)">
+            <mat-icon>edit</mat-icon>
+            <span>Edit</span>
+        </button>
+    </mat-menu>
+
+    <!-- Menu for file-level actions -->
+    <mat-menu #fileActionsMenu="matMenu">
+        <button mat-menu-item (click)="handleEdit(contextNode!)">
+            <mat-icon>edit</mat-icon>
+            <span>Edit</span>
+        </button>
     </mat-menu>
 
     <!--
@@ -79,12 +91,18 @@
             *matTreeNodeDef="let node"
             class="mdc-tree-node file-node"
             [class.selected-node]="isSelected(node)"
+            [class.menu-open]="menuOpenForNode === node.id"
             (click)="selectNode(node)"
         >
             <div class="mdc-tree-node-content">
                 <button mat-icon-button disabled style="visibility: hidden;"></button>
                 <mat-icon>insert_drive_file</mat-icon>
                 <span class="node-name"> {{node.name}}</span>
+                <span class="node-actions">
+                    <button mat-icon-button [matMenuTriggerFor]="fileActionsMenu" (menuClosed)="onDirMenuClose()" (click)="onDirMenuOpen(node, $event)" aria-label="Open file actions menu">
+                        <mat-icon>more_vert</mat-icon>
+                    </button>
+                </span>
             </div>
         </mat-tree-node>
     </mat-tree>
@@ -97,8 +115,10 @@
             [title]="modalTitle"
             [showContext]="modalShowContext"
             [isVisible]="isModalVisible"
-            (close)="closeCreationModal()"
-            (validate)="onCreationModalValidate($event)">
+            [name]="modalInputName"
+            [context]="modalInputContext"
+            (close)="closeModal()"
+            (validate)="onModalValidate($event)">
         </app-modal>
     }
 </div>

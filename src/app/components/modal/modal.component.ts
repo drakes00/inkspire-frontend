@@ -12,24 +12,26 @@ export class ModalComponent implements OnChanges {
     @Input() title: string = "Enter Name";
     @Input() isVisible: boolean = false;
     @Input() showContext: boolean = false;
+    @Input() name: string = "";
+    @Input() context: string = "";
 
     @Output() validate = new EventEmitter<{ name: string; context: string }>();
 
     nameValue: string = "";
-    context: string = "";
+    contextValue: string = "";
 
     ngOnChanges(changes: SimpleChanges): void {
         if (changes["isVisible"] && this.isVisible) {
             // Reset fields when modal becomes visible
-            this.nameValue = "";
-            this.context = "";
+            this.nameValue = this.name || "";
+            this.contextValue = this.context || "";
         }
     }
 
     validateModal(): void {
         this.validate.emit({
             name: this.nameValue,
-            context: this.context,
+            context: this.contextValue,
         });
     }
 

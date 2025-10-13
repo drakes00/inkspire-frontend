@@ -60,17 +60,29 @@ export class TreeFileComponent {
 
     // --- Modal Properties ---
 
-    /** Flag to control the visibility of the creation modal. */
+    /** Flag to control the visibility of the modal. */
     isModalVisible = false;
 
-    /** The title for the creation modal. */
+    /** The title for the modal. */
     modalTitle = "";
 
     /** Whether to show the context textarea in the modal. */
     modalShowContext = false;
 
-    /** The ID of the parent directory for the new item creation. */
+    /** The ID of the parent directory for a new item, or null for root. */
     creationDirectoryId: number | null = null;
+
+    /** Flag to indicate if the modal is in edit mode. */
+    isEditMode = false;
+
+    /** The node being edited. */
+    editingNode: ExampleFlatNode | null = null;
+
+    /** Initial name for the modal input field. */
+    modalInputName = "";
+
+    /** Initial context for the modal input field. */
+    modalInputContext = "";
 
     /** Transforms a `FileSystemNode` to a `ExampleFlatNode`. This is used by the tree flattener. */
     private _transformer = (node: FileSystemNode, level: number): ExampleFlatNode => ({
@@ -277,9 +289,12 @@ export class TreeFileComponent {
      * @param directoryId The ID of the parent directory. If null, the file is created at the root.
      */
     handleCreateFile(directoryId: number | null = null): void {
+        this.isEditMode = false;
         this.modalTitle = "Create New File";
         this.modalShowContext = false;
         this.creationDirectoryId = directoryId;
+        this.modalInputName = "";
+        this.modalInputContext = "";
         this.isModalVisible = true;
         this.cdr.markForCheck();
     }
@@ -289,9 +304,12 @@ export class TreeFileComponent {
      * @param directoryId The ID of the parent directory. If null, the directory is created at the root.
      */
     handleCreateDirectory(directoryId: number | null = null): void {
+        this.isEditMode = false;
         this.modalTitle = "Create New Directory";
         this.modalShowContext = true;
         this.creationDirectoryId = directoryId;
+        this.modalInputName = "";
+        this.modalInputContext = "";
         this.isModalVisible = true;
         this.cdr.markForCheck();
     }
@@ -309,6 +327,38 @@ export class TreeFileComponent {
     }
 
     /**
+     * Opens the modal for editing an existing file or directory.
+     * @param node The node to be edited.
+     */
+    handleEdit(node: ExampleFlatNode): void {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+
+        this.isEditMode = true;
+        this.editingNode = node;
+        this.modalInputName = node.name;
+
+        if (node.expandable) {
+            // Directory: fetch summary and show context field
+            this.modalTitle = "Edit Directory";
+            this.modalShowContext = true;
+            this.filesManagerService.getDirContent(node.id, token).subscribe((response) => {
+                const dirDetails = JSON.parse(response);
+                this.modalInputContext = dirDetails.summary || "";
+                this.isModalVisible = true;
+                this.cdr.markForCheck();
+            });
+        } else {
+            // File: no context field needed
+            this.modalTitle = "Edit File";
+            this.modalShowContext = false;
+            this.modalInputContext = "";
+            this.isModalVisible = true;
+            this.cdr.markForCheck();
+        }
+    }
+
+    /**
      * Clears the open menu state when a menu is closed.
      */
     onDirMenuClose(): void {
@@ -317,44 +367,78 @@ export class TreeFileComponent {
     }
 
     /**
-     * Closes the creation modal.
+     * Closes the modal and resets any edit-related state.
      */
-    closeCreationModal(): void {
+    closeModal(): void {
         this.isModalVisible = false;
+        this.editingNode = null;
+        this.isEditMode = false;
     }
 
     /**
-     * Handles the validation event from the creation modal.
+     * Handles the validation event from the modal, delegating to the appropriate
+     * handler based on whether the modal is in create or edit mode.
      * @param event The event payload from the modal.
      */
-    onCreationModalValidate(event: { name: string; context: string }): void {
+    onModalValidate(event: { name: string; context: string }): void {
         this.isModalVisible = false;
         const token = localStorage.getItem("token");
         if (!token) {
-            console.error("No token found, cannot create item.");
+            console.error("No token found, cannot perform action.");
             return;
         }
 
+        if (this.isEditMode) {
+            this.handleEditValidation(token, event);
+        } else {
+            this.handleCreateValidation(token, event);
+        }
+
+        this.editingNode = null;
+        this.isEditMode = false;
+    }
+
+    /**
+     * Handles the logic for creating a new file or directory.
+     * @param token The authentication token.
+     * @param event The event payload from the modal.
+     */
+    private handleCreateValidation(token: string, event: { name: string; context: string }): void {
         const type = this.modalShowContext ? "directory" : "file";
 
         if (type === "file") {
             this.filesManagerService.addFile(token, event.name, this.creationDirectoryId).subscribe({
-                next: () => {
-                    this.updateTree();
-                },
-                error: (err) => {
-                    console.error("Error creating file:", err);
-                },
+                next: () => this.updateTree(),
+                error: (err) => console.error("Error creating file:", err),
             });
         } else {
             // type === 'directory'
             this.filesManagerService.addDir(token, event.name, event.context, this.creationDirectoryId).subscribe({
-                next: () => {
-                    this.updateTree();
-                },
-                error: (err) => {
-                    console.error("Error creating directory:", err);
-                },
+                next: () => this.updateTree(),
+                error: (err) => console.error("Error creating directory:", err),
+            });
+        }
+    }
+
+    /**
+     * Handles the logic for editing an existing file or directory.
+     * @param token The authentication token.
+     * @param event The event payload from the modal.
+     */
+    private handleEditValidation(token: string, event: { name: string; context: string }): void {
+        if (!this.editingNode) return;
+
+        if (this.editingNode.expandable) {
+            // Directory
+            this.filesManagerService.editDir(token, this.editingNode.id, event.name, event.context).subscribe({
+                next: () => this.updateTree(),
+                error: (err) => console.error("Error editing directory:", err),
+            });
+        } else {
+            // File
+            this.filesManagerService.editFile(token, this.editingNode.id, event.name).subscribe({
+                next: () => this.updateTree(),
+                error: (err) => console.error("Error editing file:", err),
             });
         }
     }

@@ -317,7 +317,7 @@ describe("TreeFileComponent", () => {
             component.modalShowContext = false; // It's a file
 
             const event = { name: "new-root-file.txt", context: "" };
-            component.onCreationModalValidate(event);
+            component.onModalValidate(event);
 
             expect(mockFilesManagerService.addFile).toHaveBeenCalledWith("test-token", "new-root-file.txt", null);
             expect(component.updateTree).toHaveBeenCalled();
@@ -328,7 +328,7 @@ describe("TreeFileComponent", () => {
             component.modalShowContext = false; // It's a file
 
             const event = { name: "new-nested-file.txt", context: "" };
-            component.onCreationModalValidate(event);
+            component.onModalValidate(event);
 
             expect(mockFilesManagerService.addFile).toHaveBeenCalledWith("test-token", "new-nested-file.txt", 42);
             expect(component.updateTree).toHaveBeenCalled();
@@ -339,9 +339,14 @@ describe("TreeFileComponent", () => {
             component.modalShowContext = true; // It's a directory
 
             const event = { name: "new-root-dir", context: "some context" };
-            component.onCreationModalValidate(event);
+            component.onModalValidate(event);
 
-            expect(mockFilesManagerService.addDir).toHaveBeenCalledWith("test-token", "new-root-dir", null);
+            expect(mockFilesManagerService.addDir).toHaveBeenCalledWith(
+                "test-token",
+                "new-root-dir",
+                "some context",
+                null,
+            );
             expect(component.updateTree).toHaveBeenCalled();
         });
 
@@ -352,7 +357,7 @@ describe("TreeFileComponent", () => {
             component.creationDirectoryId = 1;
             component.modalShowContext = false;
             const event = { name: "fail.txt", context: "" };
-            component.onCreationModalValidate(event);
+            component.onModalValidate(event);
 
             expect(component.updateTree).not.toHaveBeenCalled();
             expect(console.error).toHaveBeenCalledWith("Error creating file:", jasmine.any(Error));
@@ -365,7 +370,7 @@ describe("TreeFileComponent", () => {
             component.creationDirectoryId = 1;
             component.modalShowContext = true;
             const event = { name: "fail-dir", context: "" };
-            component.onCreationModalValidate(event);
+            component.onModalValidate(event);
 
             expect(component.updateTree).not.toHaveBeenCalled();
             expect(console.error).toHaveBeenCalledWith("Error creating directory:", jasmine.any(Error));
@@ -373,7 +378,7 @@ describe("TreeFileComponent", () => {
 
         it("should close modal", () => {
             component.isModalVisible = true;
-            component.closeCreationModal();
+            component.closeModal();
             expect(component.isModalVisible).toBeFalse();
         });
     });

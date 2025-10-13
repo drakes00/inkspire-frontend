@@ -32,6 +32,25 @@ export class FilesManagerService {
         return this.http.post<any>(url, body, { headers });
     }
 
+    /**
+     * Edits a file's name.
+     * @param token The authentication token.
+     * @param id The ID of the file to edit.
+     * @param name The new name for the file.
+     * @returns An Observable with the API response.
+     */
+    public editFile(token: string, id: number, name: string): Observable<any> {
+        const url = `/api/file/${id}`;
+        const headers = new HttpHeaders({
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+            Accept: "application/json",
+        });
+
+        const body = { name };
+        return this.http.put<any>(url, body, { headers });
+    }
+
     public async delFile(token: string, id: number): Promise<string> {
         // let url = "http://localhost:8000/api/v1/file/delete"
         // let contentType = "application/json"
@@ -70,6 +89,27 @@ export class FilesManagerService {
         const body = { name: name, summary: context };
 
         return this.http.post<any>(url, body, { headers });
+    }
+
+    /**
+     * Edits a directory's name and summary.
+     * @param token The authentication token.
+     * @param id The ID of the directory to edit.
+     * @param name The new name for the directory.
+     * @param context The new summary for the directory.
+     * @returns An Observable with the API response.
+     */
+    public editDir(token: string, id: number, name: string, context: string): Observable<any> {
+        const url = `/api/dir/${id}`;
+        const headers = new HttpHeaders({
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+            Accept: "application/json",
+        });
+
+        const body = { name: name, summary: context };
+
+        return this.http.put<any>(url, body, { headers });
     }
 
     public async delDir(token: string, id: number): Promise<string> {
