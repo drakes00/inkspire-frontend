@@ -15,16 +15,20 @@
  */
 .title-bar {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-end; /* Align items to the end (right) */
     align-items: center;
     height: 48px;
     padding: 0 8px 0 16px;
     border-bottom: 1px solid var(--border-color);
     background-color: var(--component-background);
+    position: relative; /* Needed for absolute positioning of the child span */
 }
 
 .title-bar span {
     font-weight: bold;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
 }
 
 .title-bar > div {
