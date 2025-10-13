@@ -59,7 +59,7 @@ export class FilesManagerService {
      * @param dirId The ID of the parent directory. If null, the directory is created at the root.
      * @returns An Observable with the API response.
      */
-    public addDir(token: string, name: string, dirId: number | null): Observable<any> {
+    public addDir(token: string, name: string, context: string, dirId: number | null): Observable<any> {
         const url = "/api/dir";
         const headers = new HttpHeaders({
             Authorization: `Bearer ${token}`,
@@ -67,7 +67,7 @@ export class FilesManagerService {
             Accept: "application/json",
         });
 
-        const body = { name: name };
+        const body = { name: name, summary: context };
 
         return this.http.post<any>(url, body, { headers });
     }
@@ -258,4 +258,3 @@ export class FilesManagerService {
         return Promise.resolve(JSON.stringify({}));
     }
 }
-

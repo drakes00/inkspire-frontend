@@ -348,7 +348,7 @@ export class TreeFileComponent {
             });
         } else {
             // type === 'directory'
-            this.filesManagerService.addDir(token, event.name, this.creationDirectoryId).subscribe({
+            this.filesManagerService.addDir(token, event.name, event.context, this.creationDirectoryId).subscribe({
                 next: () => {
                     this.updateTree();
                 },
