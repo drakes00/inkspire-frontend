@@ -47,6 +47,7 @@
  * Sets a minimum height and a transition for hover effects.
  */
 .mdc-tree-node {
+    color: var(--text-color);
     cursor: pointer;
     min-height: 40px;
     transition: background-color 0.2s;

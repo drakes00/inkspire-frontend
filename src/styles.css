@@ -50,3 +50,20 @@ body {
     top center no-repeat; /* Center the gif */
     z-index: 9999; /* Make sure it is on top of other elements */
 }
+
+/* Styles for Angular Material components in dark theme */
+.dark-theme .mat-mdc-menu-panel {
+  background-color: var(--component-background);
+}
+
+.dark-theme .mat-mdc-menu-item {
+  color: var(--text-color);
+}
+
+.dark-theme .mat-mdc-menu-item .mat-icon {
+  color: var(--icon-color);
+}
+
+.dark-theme .mat-mdc-menu-item:hover {
+  background-color: var(--hover-color);
+}

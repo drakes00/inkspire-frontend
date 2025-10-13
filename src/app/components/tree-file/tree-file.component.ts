@@ -37,6 +37,7 @@ interface FileSystemNode {
  */
 @Component({
     selector: "app-tree-file",
+    standalone: true,
     imports: [MatTreeModule, MatButtonModule, MatIconModule, MatMenuModule, ModalComponent],
     templateUrl: "./tree-file.component.html",
     styleUrls: ["./tree-file.component.css"],
