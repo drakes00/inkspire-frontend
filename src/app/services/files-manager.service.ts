@@ -51,24 +51,20 @@ export class FilesManagerService {
         return this.http.put<any>(url, body, { headers });
     }
 
-    public async delFile(token: string, id: number): Promise<string> {
-        // let url = "http://localhost:8000/api/v1/file/delete"
-        // let contentType = "application/json"
-        // let body= JSON.stringify({token: token, id : id})
+    /**
+     * Deletes a file.
+     * @param token The authentication token.
+     * @param id The ID of the file to delete.
+     * @returns An Observable with the API response.
+     */
+    public delFile(token: string, id: number): Observable<any> {
+        const url = `/api/file/${id}`;
+        const headers = new HttpHeaders({
+            Authorization: `Bearer ${token}`,
+            Accept: "application/json",
+        });
 
-        // let response = await fetch(url, {
-        // 	method: "POST",
-        // 	body: body,
-        // 	headers: {
-        // 		Accept: contentType,
-        // 		'Content-Type': contentType,
-        // 	}
-        // });
-
-        // const rawData = await response.json();
-        // console.log(rawData);
-        // return JSON.stringify(rawData);
-        return Promise.resolve(JSON.stringify({}));
+        return this.http.delete<any>(url, { headers });
     }
 
     /**
@@ -112,24 +108,20 @@ export class FilesManagerService {
         return this.http.put<any>(url, body, { headers });
     }
 
-    public async delDir(token: string, id: number): Promise<string> {
-        // let url = "http://localhost:8000/api/v1/dir/delete"
-        // let contentType = "application/json"
-        // let body= JSON.stringify({token: token, id : id})
+    /**
+     * Deletes a directory.
+     * @param token The authentication token.
+     * @param id The ID of the directory to delete.
+     * @returns An Observable with the API response.
+     */
+    public delDir(token: string, id: number): Observable<any> {
+        const url = `/api/dir/${id}`;
+        const headers = new HttpHeaders({
+            Authorization: `Bearer ${token}`,
+            Accept: "application/json",
+        });
 
-        // let response = await fetch(url, {
-        // 	method: "POST",
-        // 	body: body,
-        // 	headers: {
-        // 		Accept: contentType,
-        // 		'Content-Type': contentType,
-        // 	}
-        // });
-
-        // const rawData = await response.json();
-        // console.log(rawData);
-        // return JSON.stringify(rawData);
-        return Promise.resolve(JSON.stringify({}));
+        return this.http.delete<any>(url, { headers });
     }
 
     /**

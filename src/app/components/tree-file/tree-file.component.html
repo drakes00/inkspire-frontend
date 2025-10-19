@@ -38,6 +38,10 @@
             <mat-icon>edit</mat-icon>
             <span>Edit</span>
         </button>
+        <button mat-menu-item (click)="handleDelete(contextNode!)">
+            <mat-icon>delete</mat-icon>
+            <span>Delete</span>
+        </button>
     </mat-menu>
 
     <!-- Menu for file-level actions -->
@@ -45,6 +49,10 @@
         <button mat-menu-item (click)="handleEdit(contextNode!)">
             <mat-icon>edit</mat-icon>
             <span>Edit</span>
+        </button>
+        <button mat-menu-item (click)="handleDelete(contextNode!)">
+            <mat-icon>delete</mat-icon>
+            <span>Delete</span>
         </button>
     </mat-menu>
 

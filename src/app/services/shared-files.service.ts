@@ -7,13 +7,13 @@ import { BehaviorSubject, Observable } from 'rxjs';
 export class SharedFilesService {
   // N.B. BehaviorSubject keep last val and share with subscribers
   private selectedFileSubject = new BehaviorSubject<any>(null);
-  
+
   // Observable shareable
   public selectedFile$ = this.selectedFileSubject.asObservable();
 
   constructor() { }
 
-  setSelectedFile(file: number | undefined): void {
+  setSelectedFile(file: number | null): void {
     this.selectedFileSubject.next(file);
   }
 }

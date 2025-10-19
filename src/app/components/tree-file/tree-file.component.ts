@@ -359,6 +359,43 @@ export class TreeFileComponent {
     }
 
     /**
+     * Handles the deletion of a file or directory.
+     * @param node The node to be deleted.
+     */
+    handleDelete(node: ExampleFlatNode): void {
+        const token = localStorage.getItem("token");
+        if (!token) {
+            console.error("No token found, cannot perform action.");
+            return;
+        }
+
+        const confirmation = confirm(`Are you sure you want to delete "${node.name}"?`);
+        if (!confirmation) {
+            return;
+        }
+
+        if (node.expandable) {
+            // Directory
+            this.filesManagerService.delDir(token, node.id).subscribe({
+                next: () => this.updateTree(),
+                error: (err) => console.error("Error deleting directory:", err),
+            });
+        } else {
+            // File
+            this.filesManagerService.delFile(token, node.id).subscribe({
+                next: () => {
+                    if (this.isSelected(node)) {
+                        this.shareFiles.setSelectedFile(null);
+                        this.selectedNode = null;
+                    }
+                    this.updateTree();
+                },
+                error: (err) => console.error("Error deleting file:", err),
+            });
+        }
+    }
+
+    /**
      * Clears the open menu state when a menu is closed.
      */
     onDirMenuClose(): void {

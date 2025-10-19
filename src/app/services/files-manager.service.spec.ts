@@ -268,4 +268,70 @@ describe("FilesManagerService", () => {
             req.flush(mockResponse);
         });
     });
+
+    describe("delFile", () => {
+        it("should send DELETE request to delete a file", () => {
+            const token = "test-token";
+            const fileId = 123;
+            const mockResponse = { message: "File deleted successfully" };
+
+            service.delFile(token, fileId).subscribe((response) => {
+                expect(response).toEqual(mockResponse);
+            });
+
+            const req = httpMock.expectOne(`/api/file/${fileId}`);
+            expect(req.request.method).toBe("DELETE");
+            expect(req.request.headers.get("Authorization")).toBe("Bearer " + token);
+
+            req.flush(mockResponse);
+        });
+
+        it("should handle HTTP error on file deletion", () => {
+            const token = "test-token";
+            const fileId = 404;
+
+            service.delFile(token, fileId).subscribe({
+                next: () => fail("should have failed with 404 error"),
+                error: (error) => {
+                    expect(error.status).toBe(404);
+                },
+            });
+
+            const req = httpMock.expectOne(`/api/file/${fileId}`);
+            req.flush("Error", { status: 404, statusText: "Not Found" });
+        });
+    });
+
+    describe("delDir", () => {
+        it("should send DELETE request to delete a directory", () => {
+            const token = "test-token";
+            const dirId = 456;
+            const mockResponse = { message: "Directory deleted successfully" };
+
+            service.delDir(token, dirId).subscribe((response) => {
+                expect(response).toEqual(mockResponse);
+            });
+
+            const req = httpMock.expectOne(`/api/dir/${dirId}`);
+            expect(req.request.method).toBe("DELETE");
+            expect(req.request.headers.get("Authorization")).toBe("Bearer " + token);
+
+            req.flush(mockResponse);
+        });
+
+        it("should handle HTTP error on directory deletion", () => {
+            const token = "test-token";
+            const dirId = 404;
+
+            service.delDir(token, dirId).subscribe({
+                next: () => fail("should have failed with 404 error"),
+                error: (error) => {
+                    expect(error.status).toBe(404);
+                },
+            });
+
+            const req = httpMock.expectOne(`/api/dir/${dirId}`);
+            req.flush("Error", { status: 404, statusText: "Not Found" });
+        });
+    });
 });

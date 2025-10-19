@@ -29,6 +29,8 @@ class MockFilesManagerService {
 
     addFile = jasmine.createSpy("addFile").and.returnValue(of({}));
     addDir = jasmine.createSpy("addDir").and.returnValue(of({}));
+    delFile = jasmine.createSpy("delFile").and.returnValue(of({}));
+    delDir = jasmine.createSpy("delDir").and.returnValue(of({}));
 }
 
 // Mock implementation of SharedFilesService for isolated testing.
@@ -380,6 +382,77 @@ describe("TreeFileComponent", () => {
             component.isModalVisible = true;
             component.closeModal();
             expect(component.isModalVisible).toBeFalse();
+        });
+    });
+
+    describe("Deletion Actions", () => {
+        let fileNode: any; // Using 'any' to simplify test setup
+        let dirNode: any;
+
+        beforeEach(() => {
+            spyOn(localStorage, "getItem").and.returnValue("test-token");
+            spyOn(component, "updateTree");
+            spyOn(window, "confirm").and.returnValue(true);
+
+            fileNode = { id: 10, name: "file-to-delete.txt", expandable: false, level: 1 };
+            dirNode = { id: 20, name: "dir-to-delete", expandable: true, level: 1 };
+        });
+
+        it("should call delFile service and update tree when deleting a file", () => {
+            component.handleDelete(fileNode);
+
+            expect(window.confirm).toHaveBeenCalledWith('Are you sure you want to delete "file-to-delete.txt"?');
+            expect(mockFilesManagerService.delFile).toHaveBeenCalledWith("test-token", 10);
+            expect(component.updateTree).toHaveBeenCalled();
+        });
+
+        it("should call delDir service and update tree when deleting a directory", () => {
+            component.handleDelete(dirNode);
+
+            expect(window.confirm).toHaveBeenCalledWith('Are you sure you want to delete "dir-to-delete"?');
+            expect(mockFilesManagerService.delDir).toHaveBeenCalledWith("test-token", 20);
+            expect(component.updateTree).toHaveBeenCalled();
+        });
+
+        it("should not delete if confirmation is cancelled", () => {
+            (window.confirm as jasmine.Spy).and.returnValue(false);
+
+            component.handleDelete(fileNode);
+
+            expect(mockFilesManagerService.delFile).not.toHaveBeenCalled();
+            expect(component.updateTree).not.toHaveBeenCalled();
+        });
+
+        it("should clear selection if the selected file is deleted", () => {
+            component.selectedNode = fileNode; // Select the node first
+            spyOn(component, "isSelected").and.returnValue(true);
+
+            component.handleDelete(fileNode);
+
+            expect(mockFilesManagerService.delFile).toHaveBeenCalled();
+            expect(mockSharedFilesService.setSelectedFile).toHaveBeenCalledWith(null);
+            expect(component.selectedNode).toBeNull();
+            expect(component.updateTree).toHaveBeenCalled();
+        });
+
+        it("should log an error if file deletion fails", () => {
+            mockFilesManagerService.delFile.and.returnValue(throwError(() => new Error("Deletion failed")));
+            spyOn(console, "error");
+
+            component.handleDelete(fileNode);
+
+            expect(component.updateTree).not.toHaveBeenCalled();
+            expect(console.error).toHaveBeenCalledWith("Error deleting file:", jasmine.any(Error));
+        });
+
+        it("should log an error if directory deletion fails", () => {
+            mockFilesManagerService.delDir.and.returnValue(throwError(() => new Error("Deletion failed")));
+            spyOn(console, "error");
+
+            component.handleDelete(dirNode);
+
+            expect(component.updateTree).not.toHaveBeenCalled();
+            expect(console.error).toHaveBeenCalledWith("Error deleting directory:", jasmine.any(Error));
         });
     });
 });
