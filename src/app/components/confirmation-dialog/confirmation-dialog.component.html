@@ -1,0 +1,9 @@
+<div class="dialog-overlay" [class.visible]="isVisible">
+  <div class="dialog-box">
+    <p>{{ message }}</p>
+    <div class="dialog-actions">
+      <button (click)="onCancel()">Cancel</button>
+      <button class="confirm" (click)="onConfirm()">Confirm</button>
+    </div>
+  </div>
+</div>

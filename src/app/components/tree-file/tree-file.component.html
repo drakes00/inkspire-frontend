@@ -129,4 +129,14 @@
             (validate)="onModalValidate($event)">
         </app-modal>
     }
+
+    <!-- Confirmation Dialog for Deletion -->
+    @if (isConfirmDialogVisible) {
+        <app-confirmation-dialog
+            [isVisible]="isConfirmDialogVisible"
+            [message]="confirmDialogMessage"
+            (confirm)="onConfirmDelete()"
+            (cancel)="onCancelDelete()">
+        </app-confirmation-dialog>
+    }
 </div>

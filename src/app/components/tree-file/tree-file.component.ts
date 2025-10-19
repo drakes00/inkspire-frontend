@@ -10,6 +10,7 @@ import { ModalComponent } from "../modal/modal.component";
 import { FilesManagerService } from "../../services/files-manager.service";
 import { SharedFilesService } from "../../services/shared-files.service";
 import { ThemeService } from "../../services/theme.service";
+import { ConfirmationDialogComponent } from "../confirmation-dialog/confirmation-dialog.component";
 
 /**
  * Represents a flattened node used by the Material tree control.
@@ -38,7 +39,7 @@ interface FileSystemNode {
 @Component({
     selector: "app-tree-file",
     standalone: true,
-    imports: [MatTreeModule, MatButtonModule, MatIconModule, MatMenuModule, ModalComponent],
+    imports: [MatTreeModule, MatButtonModule, MatIconModule, MatMenuModule, ModalComponent, ConfirmationDialogComponent],
     templateUrl: "./tree-file.component.html",
     styleUrls: ["./tree-file.component.css"],
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -83,6 +84,11 @@ export class TreeFileComponent {
 
     /** Initial context for the modal input field. */
     modalInputContext = "";
+
+    // --- Confirmation Dialog Properties ---
+    isConfirmDialogVisible = false;
+    confirmDialogMessage = "";
+    private nodeToDelete: ExampleFlatNode | null = null;
 
     /** Transforms a `FileSystemNode` to a `ExampleFlatNode`. This is used by the tree flattener. */
     private _transformer = (node: FileSystemNode, level: number): ExampleFlatNode => ({
@@ -359,20 +365,29 @@ export class TreeFileComponent {
     }
 
     /**
-     * Handles the deletion of a file or directory.
+     * Opens the confirmation dialog for deleting a node.
      * @param node The node to be deleted.
      */
     handleDelete(node: ExampleFlatNode): void {
+        this.nodeToDelete = node;
+        this.confirmDialogMessage = `Are you sure you want to delete "${node.name}"?`;
+        this.isConfirmDialogVisible = true;
+        this.cdr.markForCheck();
+    }
+
+    /**
+     * Handles the confirmation of a delete action.
+     */
+    onConfirmDelete(): void {
+        this.isConfirmDialogVisible = false;
         const token = localStorage.getItem("token");
-        if (!token) {
-            console.error("No token found, cannot perform action.");
+        if (!token || !this.nodeToDelete) {
+            console.error("Cannot perform delete: token or node is missing.");
+            this.nodeToDelete = null;
             return;
         }
 
-        const confirmation = confirm(`Are you sure you want to delete "${node.name}"?`);
-        if (!confirmation) {
-            return;
-        }
+        const node = this.nodeToDelete;
 
         if (node.expandable) {
             // Directory
@@ -393,6 +408,17 @@ export class TreeFileComponent {
                 error: (err) => console.error("Error deleting file:", err),
             });
         }
+        this.nodeToDelete = null;
+        this.cdr.markForCheck();
+    }
+
+    /**
+     * Handles the cancellation of a delete action.
+     */
+    onCancelDelete(): void {
+        this.isConfirmDialogVisible = false;
+        this.nodeToDelete = null;
+        this.cdr.markForCheck();
     }
 
     /**
