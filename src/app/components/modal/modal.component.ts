@@ -5,7 +5,7 @@ import { FormsModule } from "@angular/forms";
     selector: "app-modal",
     imports: [FormsModule],
     templateUrl: "./modal.component.html",
-    styleUrl: "./modal.component.css",
+    styleUrls: ["./modal.component.css"],
 })
 export class ModalComponent implements OnChanges {
     @Output() close = new EventEmitter<void>();

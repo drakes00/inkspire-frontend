@@ -44,7 +44,7 @@ describe("ModalComponent", () => {
         component.contextValue = "My context";
         fixture.detectChanges();
 
-        const validateButton = fixture.nativeElement.querySelector("button");
+        const validateButton = fixture.nativeElement.querySelector("button.primary");
         validateButton.click();
 
         expect(component.validate.emit).toHaveBeenCalledWith({
