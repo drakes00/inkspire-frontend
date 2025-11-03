@@ -9,37 +9,11 @@
     <div class="fakeline"></div>
 
     <div class="buttons">
-        <button type="submit" (click)="showModalAdd()">{{ addYesButton }}</button>
+        <button type="submit" (click)="showModalAdd()">Generate</button>
         @if (isModalVisibleAdd) {
             <app-modal [title]="title" (close)="hideModal()"
                        (validate)="handleModalAddSubmit($event)"></app-modal>
         }
-        <button type="submit" (click)="rephraseText()">{{ rephraseNoButton }}</button>
-        <button type="submit" (click)="showModalTranslation()">Translate</button>
-        @if (isModalVisibleTranslate) {
-            <app-modal [title]="title" (close)="hideModal()"
-                       (validate)="handleModalTranslationSubmit($event)"></app-modal>
-        }
-    </div>
-            <div class="fakeline"></div>
-
-    <div class="buttons">
-        <p>
-            load duration :
-            {{ loadduration }}
-        </p>
-        <p>
-            token per second :
-            {{ tokenpsecond }}
-        </p>
-        <p>
-            total duration :
-            {{ totalduration }}
-        </p>
-        <p>
-            Number of token :
-            {{ evalcount }}
-        </p>
     </div>
 }
 @if (pendingValidation) {
@@ -53,8 +27,7 @@
     <div class="buttons">
         <button (click)="applyGeneratedText()">Yes</button>
         <button (click)="rejectGeneratedText()">No</button>
-        <button type="submit" (click)="save()">...</button>
+        <button type="submit" (click)="save()">Save</button>
     </div>
 
 }
-

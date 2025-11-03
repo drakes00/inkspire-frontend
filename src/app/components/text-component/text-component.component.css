@@ -54,30 +54,3 @@ button:hover {
   border: 0px;
   background-color: var(--background-color);
 }
-
-/*CSS OF THE MENU*/
-.context-menu {
-    position: fixed;
-    background: var(--component-background);
-    box-shadow: 0 2px 5px var(--box-shadow-color);
-    border: 1px solid var(--border-color);
-    border-radius: 4px;
-    padding: 8px 0;
-    min-width: 150px;
-    display: none;
-    z-index: 1000;
-  }
-  
-  .context-menu.visible {
-    display: block;
-  }
-  
-  .menu-item {
-    padding: 8px 16px;
-    cursor: pointer;
-    transition: background-color 0.2s;
-  }
-  
-  .menu-item:hover {
-    background-color: var(--hover-color);
-  }
