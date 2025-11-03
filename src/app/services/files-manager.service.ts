@@ -157,23 +157,36 @@ export class FilesManagerService {
         return this.http.get<any>(url, { headers }).pipe(map((rawData) => JSON.stringify(rawData)));
     }
 
-    public async getFileContent(id: number, token: string) {
-        // let url = "http://localhost:8000/api/v1/file/get"
-        // let contentType = "application/json"
-        // let body = JSON.stringify({id:id, token: token})
+    /**
+     * Retrieves information for a specific file.
+     * @param id The ID of the file.
+     * @param token The authentication token.
+     * @returns An Observable with the file information.
+     */
+    public getFileInfo(id: number, token: string): Observable<any> {
+        const url = `/api/file/${id}`;
+        const headers = new HttpHeaders({
+            Authorization: `Bearer ${token}`,
+            Accept: "application/json",
+        });
 
-        // let response = await fetch(url, {
-        // 	method: "POST",
-        // 	body: body,
-        // 	headers: {
-        // 		Accept: contentType,
-        // 		'Content-Type': contentType,
-        // 	}
-        // });
+        return this.http.get<any>(url, { headers });
+    }
 
-        // const rawData = await response.json();
-        // return JSON.stringify(rawData);
-        return Promise.resolve(JSON.stringify({}));
+    /**
+     * Retrieves the content of a specific file.
+     * @param id The ID of the file to retrieve.
+     * @param token The authentication token for the user.
+     * @returns An Observable containing the raw content of the file.
+     */
+    public getFileContent(id: number, token: string): Observable<string> {
+        const url = `/api/file/${id}/contents`;
+        const headers = new HttpHeaders({
+            Authorization: `Bearer ${token}`,
+            Accept: "text/plain", // Expecting plain text content
+        });
+
+        return this.http.get(url, { headers, responseType: 'text' });
     }
 
     public async saveFile(id: number, token: string, name: string, content: string) {

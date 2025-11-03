@@ -4,7 +4,7 @@ import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatInputModule} from '@angular/material/input';
 import {ModalComponent} from '../modal/modal.component';
 import {SharedFilesService} from '../../services/shared-files.service';
-import {Subscription} from 'rxjs';
+import {Subscription, forkJoin} from 'rxjs';
 import {FilesManagerService} from '../../services/files-manager.service';
 import {OllamaService} from '../../services/ollama.service';
 
@@ -73,13 +73,16 @@ export class TextComponent implements OnInit, OnDestroy {
      * Function to update the text in the textarea when the user select a file
      * @param currentFile
      */
-    async updateText(currentFile: number) {
+    updateText(currentFile: number) {
         const userToken = localStorage.getItem("token")
         if (userToken) {
-            let response = await this.filesManager.getFileContent(currentFile, userToken)
-            let res = JSON.parse(response);
-            this.fileName = res.name;
-            this.text = res.param.content;
+            forkJoin({
+                info: this.filesManager.getFileInfo(currentFile, userToken),
+                content: this.filesManager.getFileContent(currentFile, userToken)
+            }).subscribe(({info, content}) => {
+                this.fileName = info.name;
+                this.text = content;
+            });
         }
     }
 

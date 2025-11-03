@@ -196,6 +196,102 @@ describe("FilesManagerService", () => {
         });
     });
 
+    describe("getFileInfo", () => {
+        it("should send GET request with correct URL and headers", () => {
+            const fileId = 1;
+            const token = "test-token";
+            const mockResponse = { id: 1, name: "test.txt" };
+
+            service.getFileInfo(fileId, token).subscribe((response) => {
+                expect(response).toEqual(mockResponse);
+            });
+
+            const req = httpMock.expectOne("/api/file/1");
+            expect(req.request.method).toBe("GET");
+            expect(req.request.headers.get("Authorization")).toBe("Bearer test-token");
+            expect(req.request.headers.get("Accept")).toBe("application/json");
+
+            req.flush(mockResponse);
+        });
+    });
+
+    describe("getFileContent", () => {
+        it("should send GET request with correct URL and headers and return file content", () => {
+            const fileId = 123;
+            const token = "test-token-789";
+            const mockFileContent = "This is the content of the file.";
+
+            service.getFileContent(fileId, token).subscribe((response) => {
+                expect(response).toBe(mockFileContent);
+            });
+
+            const req = httpMock.expectOne(`/api/file/${fileId}/contents`);
+            expect(req.request.method).toBe("GET");
+            expect(req.request.headers.get("Authorization")).toBe("Bearer test-token-789");
+            expect(req.request.headers.get("Accept")).toBe("text/plain");
+
+            req.flush(mockFileContent);
+        });
+
+        it("should handle HTTP error", () => {
+            const fileId = 404;
+            const token = "test-token";
+
+            service.getFileContent(fileId, token).subscribe({
+                next: () => fail("should have failed with 404 error"),
+                error: (error) => {
+                    expect(error.status).toBe(404);
+                    expect(error.statusText).toBe("Not Found");
+                },
+            });
+
+            const req = httpMock.expectOne(`/api/file/${fileId}/contents`);
+            expect(req.request.method).toBe("GET");
+            expect(req.request.headers.get("Authorization")).toBe("Bearer test-token");
+
+            req.flush("File not found", {
+                status: 404,
+                statusText: "Not Found",
+            });
+        });
+
+        it("should handle unauthorized error", () => {
+            const fileId = 1;
+            const token = "invalid-token";
+
+            service.getFileContent(fileId, token).subscribe({
+                next: () => fail("should have failed with 401 error"),
+                error: (error) => {
+                    expect(error.status).toBe(401);
+                },
+            });
+
+            const req = httpMock.expectOne(`/api/file/${fileId}/contents`);
+            req.flush("Unauthorized", {
+                status: 401,
+                statusText: "Unauthorized",
+            });
+        });
+
+        it("should handle forbidden error", () => {
+            const fileId = 2;
+            const token = "valid-token";
+
+            service.getFileContent(fileId, token).subscribe({
+                next: () => fail("should have failed with 403 error"),
+                error: (error) => {
+                    expect(error.status).toBe(403);
+                },
+            });
+
+            const req = httpMock.expectOne(`/api/file/${fileId}/contents`);
+            req.flush("Forbidden", {
+                status: 403,
+                statusText: "Forbidden",
+            });
+        });
+    });
+
     describe("addFile", () => {
         it("should send POST request to create a root file", () => {
             const token = "test-token";
