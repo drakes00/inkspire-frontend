@@ -35,7 +35,7 @@ InkSpire is a modern web-based text editor designed for writers who want to leve
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org/) v18 or later  
+- [Node.js](https://nodejs.org/) v20 or later  
 - npm (comes with Node.js)
 
 ### Installation
