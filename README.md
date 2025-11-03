@@ -30,6 +30,7 @@ InkSpire is a modern web-based text editor designed for writers who want to leve
 - [Angular](https://angular.io/) — Modern framework for single-page applications  
 - [Angular Material](https://material.angular.io/) — UI component library for a clean design  
 - [TypeScript](https://www.typescriptlang.org/) — Strongly-typed JavaScript for safer development
+- [Toast UI Editor](https://ui.toast.com/tui-editor) — Web-based Markdown editor
 
 ---
 
