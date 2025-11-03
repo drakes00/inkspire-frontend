@@ -5,12 +5,10 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { TextComponent } from './text-component.component';
 import { SharedFilesService } from '../../services/shared-files.service';
 import { FilesManagerService } from '../../services/files-manager.service';
-import { OllamaService } from '../../services/ollama.service';
-import { of } from 'rxjs';
+import { Subject, of } from 'rxjs';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ModalComponent } from '../modal/modal.component';
 import { fakeAsync, tick } from '@angular/core/testing';
-
 
 // Mock du MarkdownEditorComponent
 @Component({
@@ -25,27 +23,29 @@ class MockMarkdownEditorComponent {
 
 // Mock services
 class MockSharedFilesService {
-  selectedFile$ = of(1);
+  private selectedFileSubject = new Subject<number>();
+  selectedFile$ = this.selectedFileSubject.asObservable();
+
+  emitFile(fileId: number) {
+    this.selectedFileSubject.next(fileId);
+  }
 }
 
 class MockFilesManagerService {
   getFileInfo(fileId: number, token: string) {
     return of({ name: 'test.txt' });
   }
+
   getFileContent(fileId: number, token: string) {
     return of('file content');
   }
-  saveFile(fileId: number, token: string, fileName: string, content: string) {
-    return Promise.resolve();
+
+  saveFile(fileId: number, token: string, fileName: string, content: string): Promise<string> {
+    return Promise.resolve(JSON.stringify({}));
   }
+
   getDirContent(fileId: number, token: string) {
     return of('{}');
-  }
-}
-
-class MockOllamaService {
-  addButtonOllama(fileId: number, token: string, prompt: string, context: any, text: string) {
-    return Promise.resolve(JSON.stringify({ param: { response: 'generated text' } }));
   }
 }
 
@@ -53,7 +53,7 @@ describe('TextComponent', () => {
   let component: TextComponent;
   let fixture: ComponentFixture<TextComponent>;
   let filesManagerService: FilesManagerService;
-  let ollamaService: OllamaService;
+  let sharedFilesService: MockSharedFilesService;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -62,14 +62,13 @@ describe('TextComponent', () => {
         ReactiveFormsModule,
         TextComponent,
         ModalComponent,
-        MockMarkdownEditorComponent, // Utiliser le mock au lieu du vrai composant
+        MockMarkdownEditorComponent,
         MatFormFieldModule,
         MatInputModule
       ],
       providers: [
         { provide: SharedFilesService, useClass: MockSharedFilesService },
         { provide: FilesManagerService, useClass: MockFilesManagerService },
-        { provide: OllamaService, useClass: MockOllamaService }
       ]
     })
     .compileComponents();
@@ -77,8 +76,7 @@ describe('TextComponent', () => {
     fixture = TestBed.createComponent(TextComponent);
     component = fixture.componentInstance;
     filesManagerService = TestBed.inject(FilesManagerService);
-    ollamaService = TestBed.inject(OllamaService);
-    fixture.detectChanges();
+    sharedFilesService = TestBed.inject(SharedFilesService) as any;
   });
 
   it('should create', () => {
@@ -86,66 +84,69 @@ describe('TextComponent', () => {
   });
 
   it('should update text on init', fakeAsync(() => {
+    localStorage.setItem('token', 'test-token');
+
     spyOn(filesManagerService, 'getFileInfo').and.returnValue(of({ name: 'test.txt' }));
     spyOn(filesManagerService, 'getFileContent').and.returnValue(of('file content'));
 
-    component.ngOnInit();
-    tick(); // Avance le temps virtuel pour résoudre les observables
+    fixture.detectChanges();
+    sharedFilesService.emitFile(1);
+    tick();
 
-    expect(filesManagerService.getFileInfo).toHaveBeenCalled();
-    expect(filesManagerService.getFileContent).toHaveBeenCalled();
+    expect(filesManagerService.getFileInfo).toHaveBeenCalledWith(1, 'test-token');
+    expect(filesManagerService.getFileContent).toHaveBeenCalledWith(1, 'test-token');
     expect(component.fileName).toBe('test.txt');
     expect(component.text).toBe('file content');
+    expect(component.currentFileID).toBe(1);
+
+    localStorage.removeItem('token');
   }));
 
   it('should save a file', async () => {
-    spyOn(filesManagerService, 'saveFile').and.callThrough();
-
-    component.currentFileID = 1;
     localStorage.setItem('token', 'test-token');
 
+    // Option 1 : callThrough
+    const saveSpy = spyOn(filesManagerService, 'saveFile').and.callThrough();
+
+    component.currentFileID = 1;
+    component.fileName = 'test.txt';
+    component.text = 'some content';
+
     await component.save();
+
+    expect(saveSpy).toHaveBeenCalledWith(
+      1,
+      'test-token',
+      'test.txt',
+      'some content'
+    );
+
+    localStorage.removeItem('token');
+  });
+
+  // Option 2 : Si vous voulez tester la valeur de retour
+  it('should save a file and handle response', async () => {
+    localStorage.setItem('token', 'test-token');
+
+    const mockResponse = JSON.stringify({ success: true });
+    spyOn(filesManagerService, 'saveFile').and.returnValue(Promise.resolve(mockResponse));
+
+    component.currentFileID = 1;
+    component.fileName = 'test.txt';
+    component.text = 'some content';
+
+    const result = await component.save();
 
     expect(filesManagerService.saveFile).toHaveBeenCalledWith(
       1,
       'test-token',
-      component.fileName,
-      component.text
+      'test.txt',
+      'some content'
     );
+
+    // Si save() retournait la valeur, vous pourriez tester :
+    // expect(result).toBe(mockResponse);
+
+    localStorage.removeItem('token');
   });
-
-  // it('should show and hide modal', () => {
-  //   component.showModalAdd();
-  //   expect(component.isModalVisibleAdd).toBeTrue();
-  //   component.hideModal();
-  //   expect(component.isModalVisibleAdd).toBeFalse();
-  // });
-
-  // it('should handle modal submit and generate text', async () => {
-  //   spyOn(ollamaService, 'addButtonOllama').and.callThrough();
-  //   localStorage.setItem('token', 'test-token');
-  //   component.currentFileID = 1;
-  //   component.text = 'some initial text';
-  //   await component.handleModalAddSubmit({ name: 'generate something', context: '' });
-  //   expect(ollamaService.addButtonOllama).toHaveBeenCalled();
-  //   expect(component.generatedText).toBe('generated text');
-  //   expect(component.pendingValidation).toBeTrue();
-  // });
-
-  // it('should apply generated text', () => {
-  //   component.text = 'initial text. ';
-  //   component.generatedText = 'generated text';
-  //   component.applyGeneratedText();
-  //   expect(component.text).toBe('initial text. generated text');
-  //   expect(component.generatedText).toBe('');
-  //   expect(component.pendingValidation).toBeFalse();
-  // });
-
-  // it('should reject generated text', () => {
-  //   component.generatedText = 'generated text';
-  //   component.pendingValidation = true;
-  //   component.rejectGeneratedText();
-  //   expect(component.generatedText).toBe('');
-  //   expect(component.pendingValidation).toBeFalse();
-  // });
 });
