@@ -1,15 +1,14 @@
-<div class="text"><p>INKSPIRE</p></div>
+<div class="text"><p>{{ fileName }}</p></div>
 
 @if (!pendingValidation) {
-    <div class="text"><textarea #prompt [(ngModel)]="text" id="prompt" name="prompt" rows="28" cols="85"
-                                placeholder="Type something here..."
-                                [spellcheck]="true" autocomplete="on" autocapitalize="sentences"></textarea></div>
+    <div class="text"><app-markdown-editor [content]="text" (contentChange)="onContentChange($event)"></app-markdown-editor></div>
 
 
     <div class="fakeline"></div>
 
     <div class="buttons">
         <button type="submit" (click)="showModalAdd()">Generate</button>
+        <button (click)="save()">Save</button>
         @if (isModalVisibleAdd) {
             <app-modal [title]="title" (close)="hideModal()"
                        (validate)="handleModalAddSubmit($event)"></app-modal>

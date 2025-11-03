@@ -1,4 +1,6 @@
 /* You can add global styles to this file, and also import other style files */
+@import "@toast-ui/editor/dist/toastui-editor.css";
+@import "@toast-ui/editor/dist/theme/toastui-editor-dark.css";
 
 /* Default (light) theme color variables */
 :root {
@@ -30,8 +32,8 @@ body.dark-theme {
 
 
 html, body { height: 100%; }
-body { 
-    margin: 0; 
+body {
+    margin: 0;
     font-family: Roboto, "Helvetica Neue", sans-serif;
     background-color: var(--background-color);
     color: var(--text-color);

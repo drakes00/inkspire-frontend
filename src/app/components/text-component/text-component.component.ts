@@ -7,10 +7,11 @@ import {SharedFilesService} from '../../services/shared-files.service';
 import {Subscription, forkJoin} from 'rxjs';
 import {FilesManagerService} from '../../services/files-manager.service';
 import {OllamaService} from '../../services/ollama.service';
+import { MarkdownEditorComponent } from '../markdown-editor/markdown-editor.component';
 
 @Component({
     selector: 'app-text-page',
-    imports: [MatFormFieldModule, MatInputModule, FormsModule, ReactiveFormsModule, ModalComponent],
+    imports: [MatFormFieldModule, MatInputModule, FormsModule, ReactiveFormsModule, ModalComponent, MarkdownEditorComponent],
     templateUrl: './text-component.component.html',
     styleUrl: './text-component.component.css'
 })
@@ -84,6 +85,11 @@ export class TextComponent implements OnInit, OnDestroy {
                 this.text = content;
             });
         }
+    }
+
+    onContentChange(newContent: string) {
+        this.text = newContent;
+        // console.log("Markdown content updated:", this.text);
     }
 
 

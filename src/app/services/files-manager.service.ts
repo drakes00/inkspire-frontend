@@ -190,6 +190,7 @@ export class FilesManagerService {
     }
 
     public async saveFile(id: number, token: string, name: string, content: string) {
+        console.log(content);
         // let url = "http://localhost:8000/api/v1/file/save"
         // let contentType = "application/json"
         // let body = JSON.stringify({id : id, token : token, name : name, content : content})
