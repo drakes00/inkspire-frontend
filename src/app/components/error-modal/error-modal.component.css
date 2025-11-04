@@ -11,6 +11,8 @@
 .modal-card {
   width: 380px;
   padding: 16px;
+  background-color: var(--component-background);
+  color: var(--text-color);
 }
 
 .actions {
