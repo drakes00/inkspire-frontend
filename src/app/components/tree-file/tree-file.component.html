@@ -139,4 +139,11 @@
             (cancel)="onCancelDelete()">
         </app-confirmation-dialog>
     }
+
+    <!-- Error Modal -->
+    <app-error-modal
+      [visible]="errorVisible"
+      [message]="errorMessage"
+      (close)="errorVisible = false">
+    </app-error-modal>
 </div>

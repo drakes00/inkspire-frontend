@@ -11,6 +11,7 @@ import { FilesManagerService } from "../../services/files-manager.service";
 import { SharedFilesService } from "../../services/shared-files.service";
 import { ThemeService } from "../../services/theme.service";
 import { ConfirmationDialogComponent } from "../confirmation-dialog/confirmation-dialog.component";
+import { ErrorModalComponent } from "../error-modal/error-modal.component";
 
 /**
  * Represents a flattened node used by the Material tree control.
@@ -39,7 +40,7 @@ interface FileSystemNode {
 @Component({
     selector: "app-tree-file",
     standalone: true,
-    imports: [MatTreeModule, MatButtonModule, MatIconModule, MatMenuModule, ModalComponent, ConfirmationDialogComponent],
+    imports: [MatTreeModule, MatButtonModule, MatIconModule, MatMenuModule, ModalComponent, ConfirmationDialogComponent, ErrorModalComponent],
     templateUrl: "./tree-file.component.html",
     styleUrls: ["./tree-file.component.css"],
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -89,6 +90,10 @@ export class TreeFileComponent {
     isConfirmDialogVisible = false;
     confirmDialogMessage = "";
     private nodeToDelete: ExampleFlatNode | null = null;
+
+    // --- Error Modal Properties ---
+    errorVisible = false;
+    errorMessage = "An unexpected error occurred";
 
     /** Transforms a `FileSystemNode` to a `ExampleFlatNode`. This is used by the tree flattener. */
     private _transformer = (node: FileSystemNode, level: number): ExampleFlatNode => ({
@@ -195,6 +200,7 @@ export class TreeFileComponent {
                                 return dirNode;
                             }),
                             catchError((err) => {
+                                this.showErrorModal(`Error loading directory content for: ${dirNode.name}`);
                                 console.error("Error loading directory content for:", dirNode.name, err);
                                 // Return the directory node even if content loading fails
                                 return of(dirNode);
@@ -231,7 +237,7 @@ export class TreeFileComponent {
                 },
                 error: (err) => {
                     this.removeLoading();
-                    // The auth interceptor should handle 401 errors and redirect.
+                    this.showErrorModal("An error occurred while updating the tree.");
                     console.error("An error occurred while updating the tree:", err);
                 },
             });
@@ -282,6 +288,16 @@ export class TreeFileComponent {
     }
 
     // --------------------  ACTIONS & MODAL HANDLING  --------------------
+
+    /**
+     * Shows an error modal with a specified message.
+     * @param message The message to display in the error modal.
+     */
+    showErrorModal(message: string): void {
+        this.errorMessage = message;
+        this.errorVisible = true;
+        this.cdr.markForCheck();
+    }
 
     /**
      * Toggles the application's theme between light and dark mode.
@@ -382,7 +398,7 @@ export class TreeFileComponent {
         this.isConfirmDialogVisible = false;
         const token = localStorage.getItem("token");
         if (!token || !this.nodeToDelete) {
-            console.error("Cannot perform delete: token or node is missing.");
+            this.showErrorModal("Cannot perform delete: token or node is missing.");
             this.nodeToDelete = null;
             return;
         }
@@ -393,7 +409,10 @@ export class TreeFileComponent {
             // Directory
             this.filesManagerService.delDir(token, node.id).subscribe({
                 next: () => this.updateTree(),
-                error: (err) => console.error("Error deleting directory:", err),
+                error: (err) => {
+                    this.showErrorModal("Error deleting directory.");
+                    console.error("Error deleting directory:", err);
+                },
             });
         } else {
             // File
@@ -405,7 +424,10 @@ export class TreeFileComponent {
                     }
                     this.updateTree();
                 },
-                error: (err) => console.error("Error deleting file:", err),
+                error: (err) => {
+                    this.showErrorModal("Error deleting file.");
+                    console.error("Error deleting file:", err);
+                },
             });
         }
         this.nodeToDelete = null;
@@ -447,7 +469,7 @@ export class TreeFileComponent {
         this.isModalVisible = false;
         const token = localStorage.getItem("token");
         if (!token) {
-            console.error("No token found, cannot perform action.");
+            this.showErrorModal("No token found, cannot perform action.");
             return;
         }
 
@@ -472,13 +494,19 @@ export class TreeFileComponent {
         if (type === "file") {
             this.filesManagerService.addFile(token, event.name, this.creationDirectoryId).subscribe({
                 next: () => this.updateTree(),
-                error: (err) => console.error("Error creating file:", err),
+                error: (err) => {
+                    this.showErrorModal("Error creating file.");
+                    console.error("Error creating file:", err);
+                },
             });
         } else {
             // type === 'directory'
             this.filesManagerService.addDir(token, event.name, event.context, this.creationDirectoryId).subscribe({
                 next: () => this.updateTree(),
-                error: (err) => console.error("Error creating directory:", err),
+                error: (err) => {
+                    this.showErrorModal("Error creating directory.");
+                    console.error("Error creating directory:", err);
+                },
             });
         }
     }
@@ -495,13 +523,19 @@ export class TreeFileComponent {
             // Directory
             this.filesManagerService.editDir(token, this.editingNode.id, event.name, event.context).subscribe({
                 next: () => this.updateTree(),
-                error: (err) => console.error("Error editing directory:", err),
+                error: (err) => {
+                    this.showErrorModal("Error editing directory.");
+                    console.error("Error editing directory:", err);
+                },
             });
         } else {
             // File
             this.filesManagerService.editFile(token, this.editingNode.id, event.name).subscribe({
                 next: () => this.updateTree(),
-                error: (err) => console.error("Error editing file:", err),
+                error: (err) => {
+                    this.showErrorModal("Error editing file.");
+                    console.error("Error editing file:", err);
+                },
             });
         }
     }
