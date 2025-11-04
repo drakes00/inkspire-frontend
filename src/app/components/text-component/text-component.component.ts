@@ -30,45 +30,42 @@ export class TextComponent implements OnInit, OnDestroy {
     textForm: FormGroup = new FormGroup({
         text: new FormControl(this.text, Validators.required)
     });
+
     private subscription: Subscription = new Subscription();
+    private autoSaveTimer?: number; // AJOUT: référence au timer
+    private isDestroyed = false; // AJOUT: flag pour éviter les opérations après destroy
 
-
-    constructor(private shareFiles: SharedFilesService, private filesManager: FilesManagerService, private ollamaService: OllamaService) {
-    }
-
+    constructor(
+        private shareFiles: SharedFilesService,
+        private filesManager: FilesManagerService,
+        private ollamaService: OllamaService
+    ) {}
 
     ngOnInit() {
         this.subscription = this.shareFiles.selectedFile$.subscribe(file => {
-            if (file) {
+            if (file && !this.isDestroyed) {
                 this.currentFileID = file;
                 this.updateText(this.currentFileID);
             }
         });
 
-        // Save the text every 5 sec
-        var text_save_timer = window.setInterval(() => {
-            this.save()
-        }, 5000)
-
-        var text_element = document.getElementById("prompt");
-
-        // Save the text when 'change' event append
-        if (text_element != null) {
-            text_element.addEventListener('change', event => {
-                this.save();
-            })
-        }
-        // Reset the time interval if input
-        if (text_element != null) {
-            text_element.addEventListener('keypress', event => {
-                clearInterval(text_save_timer);
-                text_save_timer = window.setInterval(() => {
-                    this.save()
-                }, 5000)
-            })
-        }
+        // AMÉLIORATION: Auto-save avec nettoyage approprié
+        this.startAutoSave();
     }
 
+    /**
+     * NOUVEAU: Démarrer l'auto-save avec un timer nettoyable
+     */
+    private startAutoSave() {
+        // Sauvegarder toutes les 5 secondes
+        this.autoSaveTimer = window.setInterval(() => {
+            if (!this.isDestroyed) {
+                this.save().catch(error => {
+                    console.error('Auto-save failed:', error);
+                });
+            }
+        }, 5000);
+    }
 
     /**
      * Function to update the text in the textarea when the user select a file
@@ -80,26 +77,54 @@ export class TextComponent implements OnInit, OnDestroy {
             forkJoin({
                 info: this.filesManager.getFileInfo(currentFile, userToken),
                 content: this.filesManager.getFileContent(currentFile, userToken)
-            }).subscribe(({info, content}) => {
-                this.fileName = info.name;
-                this.text = content;
+            }).subscribe({
+                next: ({info, content}) => {
+                    if (!this.isDestroyed) {
+                        this.fileName = info.name;
+                        this.text = content;
+                    }
+                },
+                error: (error) => {
+                    console.error('Error loading file:', error);
+                    // AMÉLIORATION: Vous pourriez ajouter une notification utilisateur ici
+                }
             });
         }
     }
 
+    /**
+     * AMÉLIORATION: Méthode appelée quand le contenu du markdown editor change
+     */
     onContentChange(newContent: string) {
         this.text = newContent;
-        // console.log("Markdown content updated:", this.text);
-    }
 
+        // Optionnel: Réinitialiser le timer d'auto-save après chaque modification
+        if (this.autoSaveTimer) {
+            window.clearInterval(this.autoSaveTimer);
+            this.startAutoSave();
+        }
+    }
 
     /**
      * Function to handle the save in DB
+     * AMÉLIORATION: Retourner une Promise et gérer les erreurs
      */
-    async save() {
+    async save(): Promise<void> {
         const userToken = localStorage.getItem("token");
         if (userToken && this.currentFileID !== 0) {
-            await this.filesManager.saveFile(this.currentFileID, userToken, this.fileName, this.text)
+            try {
+                await this.filesManager.saveFile(
+                    this.currentFileID,
+                    userToken,
+                    this.fileName,
+                    this.text
+                );
+                // console.log('File saved successfully');
+            } catch (error) {
+                console.error('Error saving file:', error);
+                // AMÉLIORATION: Vous pourriez ajouter une notification utilisateur ici
+                throw error; // Re-throw pour que le caller puisse gérer
+            }
         }
     }
 
@@ -117,41 +142,79 @@ export class TextComponent implements OnInit, OnDestroy {
         this.isModalVisibleAdd = false;
     }
 
-
+    /**
+     * AMÉLIORATION: Nettoyage complet des ressources
+     */
     ngOnDestroy(): void {
+        this.isDestroyed = true;
+
+        // Nettoyer la subscription
         if (this.subscription) {
             this.subscription.unsubscribe();
         }
+
+        // Nettoyer le timer d'auto-save
+        if (this.autoSaveTimer) {
+            window.clearInterval(this.autoSaveTimer);
+            this.autoSaveTimer = undefined;
+        }
+
+        // Sauvegarder une dernière fois avant de quitter
+        this.save().catch(error => {
+            console.error('Final save failed:', error);
+        });
     }
 
     /**
      * async function to handle the modal add submit and send text to ollama
      * @param data
+     * AMÉLIORATION: Meilleure gestion d'erreurs
      */
     async handleModalAddSubmit(data: { name: string, context: string }) {
-        if (this.text === undefined || this.text === null) {
+        // Validation
+        if (!this.text) {
             console.error("Text is empty");
             return;
         }
 
+        if (!data.name || data.name.trim() === "") {
+            console.error("Prompt is empty");
+            return;
+        }
+
         const tokenUser = localStorage.getItem('token');
-        if (!tokenUser) return;
+        if (!tokenUser) {
+            console.error("No authentication token found");
+            return;
+        }
 
-        this.filesManager.getDirContent(this.currentFileID, tokenUser).subscribe(async (getContext) => {
-            let context = JSON.parse(getContext);
-            let result = null;
+        try {
+            // Récupérer le contexte
+            const getContext = await this.filesManager.getDirContent(
+                this.currentFileID,
+                tokenUser
+            ).toPromise();
 
-            if (data.name === undefined || data.name === null || data.name === "") {
-                console.error("Prompt is empty");
+            if (!getContext) {
+                console.error("Failed to get context");
                 return;
             }
 
-            result = await this.ollamaService.addButtonOllama(this.currentFileID, tokenUser, data.name, context, this.text);
+            const context = JSON.parse(getContext);
+
+            // Appeler Ollama
+            const result = await this.ollamaService.addButtonOllama(
+                this.currentFileID,
+                tokenUser,
+                data.name,
+                context,
+                this.text
+            );
 
             if (result) {
-                let res = JSON.parse(result);
-                if (res.param.response.length > 0) {
-                    let rawText = res.param.response;
+                const res = JSON.parse(result);
+                if (res.param?.response && res.param.response.length > 0) {
+                    const rawText = res.param.response;
                     if (rawText !== '') {
                         this.generatedText = rawText;
                         this.pendingValidation = true;
@@ -160,7 +223,10 @@ export class TextComponent implements OnInit, OnDestroy {
                     }
                 }
             }
-        });
+        } catch (error) {
+            console.error("Error generating text with Ollama:", error);
+            // AMÉLIORATION: Ajouter une notification utilisateur
+        }
     }
 
     /**
@@ -170,6 +236,11 @@ export class TextComponent implements OnInit, OnDestroy {
         this.text += this.generatedText;
         this.generatedText = '';
         this.pendingValidation = false;
+
+        // AMÉLIORATION: Sauvegarder automatiquement après application
+        this.save().catch(error => {
+            console.error('Error saving after applying generated text:', error);
+        });
     }
 
     /**
