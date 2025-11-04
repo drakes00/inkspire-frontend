@@ -7,13 +7,23 @@ import {SharedFilesService} from '../../services/shared-files.service';
 import {Subscription, forkJoin} from 'rxjs';
 import {FilesManagerService} from '../../services/files-manager.service';
 import {OllamaService} from '../../services/ollama.service';
-import { MarkdownEditorComponent } from '../markdown-editor/markdown-editor.component';
+import {MarkdownEditorComponent} from '../markdown-editor/markdown-editor.component';
+import {ErrorModalComponent} from '../error-modal/error-modal.component';
+
 
 @Component({
-    selector: 'app-text-page',
-    imports: [MatFormFieldModule, MatInputModule, FormsModule, ReactiveFormsModule, ModalComponent, MarkdownEditorComponent],
-    templateUrl: './text-component.component.html',
-    styleUrl: './text-component.component.css'
+  selector: 'app-text-page',
+  imports: [
+    MatFormFieldModule,
+    MatInputModule,
+    FormsModule,
+    ReactiveFormsModule,
+    ModalComponent,
+    MarkdownEditorComponent,
+    ErrorModalComponent
+  ],
+  templateUrl: './text-component.component.html',
+  styleUrl: './text-component.component.css'
 })
 
 export class TextComponent implements OnInit, OnDestroy {
@@ -26,14 +36,16 @@ export class TextComponent implements OnInit, OnDestroy {
     @ViewChild('prompt') promptTextarea!: ElementRef<HTMLTextAreaElement>;
     currentFileID: number = 0;
     pendingValidation: boolean = false;
+    errorVisible = false;
+    errorMessage = 'An unexpected error occurred';
 
     textForm: FormGroup = new FormGroup({
         text: new FormControl(this.text, Validators.required)
     });
 
     private subscription: Subscription = new Subscription();
-    private autoSaveTimer?: number; // AJOUT: référence au timer
-    private isDestroyed = false; // AJOUT: flag pour éviter les opérations après destroy
+    private autoSaveTimer?: number;
+    private isDestroyed = false;
 
     constructor(
         private shareFiles: SharedFilesService,
@@ -49,7 +61,6 @@ export class TextComponent implements OnInit, OnDestroy {
             }
         });
 
-        // AMÉLIORATION: Auto-save avec nettoyage approprié
         this.startAutoSave();
     }
 
@@ -62,6 +73,7 @@ export class TextComponent implements OnInit, OnDestroy {
             if (!this.isDestroyed) {
                 this.save().catch(error => {
                     console.error('Auto-save failed:', error);
+                    this.showErrorModal('Auto-save failed');
                 });
             }
         }, 5000);
@@ -86,7 +98,7 @@ export class TextComponent implements OnInit, OnDestroy {
                 },
                 error: (error) => {
                     console.error('Error loading file:', error);
-                    // AMÉLIORATION: Vous pourriez ajouter une notification utilisateur ici
+                    this.showErrorModal('Failed to load the file');
                 }
             });
         }
@@ -122,8 +134,7 @@ export class TextComponent implements OnInit, OnDestroy {
                 // console.log('File saved successfully');
             } catch (error) {
                 console.error('Error saving file:', error);
-                // AMÉLIORATION: Vous pourriez ajouter une notification utilisateur ici
-                throw error; // Re-throw pour que le caller puisse gérer
+                this.showErrorModal('Failed to save the file');
             }
         }
     }
@@ -140,6 +151,11 @@ export class TextComponent implements OnInit, OnDestroy {
      */
     hideModal() {
         this.isModalVisibleAdd = false;
+    }
+
+    showErrorModal(message?: string) {
+        this.errorMessage = message ?? 'An unexpected error occurred';
+        this.errorVisible = true;
     }
 
     /**
@@ -162,6 +178,7 @@ export class TextComponent implements OnInit, OnDestroy {
         // Sauvegarder une dernière fois avant de quitter
         this.save().catch(error => {
             console.error('Final save failed:', error);
+            this.showErrorModal('Failed to save the file');
         });
     }
 
@@ -197,6 +214,7 @@ export class TextComponent implements OnInit, OnDestroy {
 
             if (!getContext) {
                 console.error("Failed to get context");
+                this.showErrorModal('Failed to get context');
                 return;
             }
 
@@ -225,7 +243,7 @@ export class TextComponent implements OnInit, OnDestroy {
             }
         } catch (error) {
             console.error("Error generating text with Ollama:", error);
-            // AMÉLIORATION: Ajouter une notification utilisateur
+            this.showErrorModal('Error generating text with Ollama');
         }
     }
 
@@ -240,6 +258,7 @@ export class TextComponent implements OnInit, OnDestroy {
         // AMÉLIORATION: Sauvegarder automatiquement après application
         this.save().catch(error => {
             console.error('Error saving after applying generated text:', error);
+            this.showErrorModal('Error saving after applying generated text');
         });
     }
 

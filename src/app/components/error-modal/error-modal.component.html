@@ -1,0 +1,11 @@
+<div class="backdrop" *ngIf="visible" (click)="onBackdropClick($event)">
+  <mat-card class="modal-card">
+    <h2 mat-card-title>Something went wrong</h2>
+    <p>{{ message }}</p>
+
+    <div class="actions">
+      <button mat-raised-button color="primary" (click)="close.emit()">Close</button>
+    </div>
+  </mat-card>
+</div>
+

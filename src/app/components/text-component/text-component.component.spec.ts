@@ -1,7 +1,7 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { ComponentFixture, TestBed, fakeAsync, tick, flush } from '@angular/core/testing';
+import { ComponentFixture, TestBed, fakeAsync, tick, flushMicrotasks } from '@angular/core/testing';
 import { TextComponent } from './text-component.component';
 import { SharedFilesService } from '../../services/shared-files.service';
 import { FilesManagerService } from '../../services/files-manager.service';
@@ -20,7 +20,6 @@ class MockMarkdownEditorComponent {
   @Input()
   set content(value: string) {
     this._content = value;
-    // Simuler le comportement de Toast UI Editor
     this.contentChange.emit(value);
   }
   get content(): string {
@@ -30,11 +29,21 @@ class MockMarkdownEditorComponent {
   private _content: string = '';
   @Output() contentChange = new EventEmitter<string>();
 
-  // Méthodes utiles pour les tests
   simulateUserEdit(newContent: string) {
     this._content = newContent;
     this.contentChange.emit(newContent);
   }
+}
+
+// Mock ErrorModalComponent
+@Component({
+  selector: 'app-error-modal',
+  template: '<div></div>',
+  standalone: true
+})
+class MockErrorModalComponent {
+  @Input() visible: boolean = false;
+  @Input() message: string = '';
 }
 
 // Mock services
@@ -82,9 +91,14 @@ describe('TextComponent', () => {
   let sharedFilesService: MockSharedFilesService;
   let ollamaService: OllamaService;
 
+  // Spy pour capturer les console.error sans polluer la console
+  let consoleErrorSpy: jasmine.Spy;
+
   beforeEach(async () => {
-    // Nettoyer localStorage avant chaque test
     localStorage.clear();
+
+    // Spy sur console.error pour éviter la pollution de la console
+    consoleErrorSpy = spyOn(console, 'error');
 
     await TestBed.configureTestingModule({
       imports: [
@@ -93,6 +107,7 @@ describe('TextComponent', () => {
         TextComponent,
         ModalComponent,
         MockMarkdownEditorComponent,
+        MockErrorModalComponent,
         MatFormFieldModule,
         MatInputModule
       ],
@@ -129,6 +144,7 @@ describe('TextComponent', () => {
     expect(component.isModalVisibleAdd).toBeFalse();
     expect(component.pendingValidation).toBeFalse();
     expect(component.generatedText).toBe('');
+    expect(component.errorVisible).toBeFalse();
   });
 
   // ========== Tests de chargement de fichier ==========
@@ -151,7 +167,6 @@ describe('TextComponent', () => {
   }));
 
   it('should not update text when no token is available', fakeAsync(() => {
-    // Pas de token dans localStorage
     spyOn(filesManagerService, 'getFileInfo');
     spyOn(filesManagerService, 'getFileContent');
 
@@ -205,6 +220,7 @@ describe('TextComponent', () => {
     await component.save();
 
     expect(saveSpy).toHaveBeenCalledWith(1, 'test-token', 'test.txt', 'some content');
+    expect(component.errorVisible).toBeFalse();
   });
 
   it('should not save when no token is available', async () => {
@@ -223,7 +239,7 @@ describe('TextComponent', () => {
     localStorage.setItem('token', 'test-token');
     const saveSpy = spyOn(filesManagerService, 'saveFile');
 
-    component.currentFileID = 0; // Pas de fichier sélectionné
+    component.currentFileID = 0;
     component.text = 'some content';
 
     await component.save();
@@ -231,10 +247,9 @@ describe('TextComponent', () => {
     expect(saveSpy).not.toHaveBeenCalled();
   });
 
-  it('should handle save errors gracefully', async () => {
+  it('should handle save errors gracefully and show error modal', async () => {
     localStorage.setItem('token', 'test-token');
 
-    const consoleErrorSpy = spyOn(console, 'error');
     spyOn(filesManagerService, 'saveFile').and.returnValue(
       Promise.reject(new Error('Network error'))
     );
@@ -243,11 +258,18 @@ describe('TextComponent', () => {
     component.fileName = 'test.txt';
     component.text = 'some content';
 
-    try {
-      await component.save();
-    } catch (error) {
-      expect(error).toBeDefined();
-    }
+    // La méthode ne doit PAS throw, mais gérer l'erreur en interne
+    await component.save();
+
+    // Vérifier que l'erreur est loggée
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      'Error saving file:',
+      jasmine.any(Error)
+    );
+
+    // Vérifier que le modal d'erreur est affiché
+    expect(component.errorVisible).toBeTrue();
+    expect(component.errorMessage).toBe('Failed to save the file');
   });
 
   // ========== Tests de la modal ==========
@@ -262,6 +284,18 @@ describe('TextComponent', () => {
     component.isModalVisibleAdd = true;
     component.hideModal();
     expect(component.isModalVisibleAdd).toBeFalse();
+  });
+
+  it('should show error modal with custom message', () => {
+    component.showErrorModal('Custom error message');
+    expect(component.errorVisible).toBeTrue();
+    expect(component.errorMessage).toBe('Custom error message');
+  });
+
+  it('should show error modal with default message', () => {
+    component.showErrorModal();
+    expect(component.errorVisible).toBeTrue();
+    expect(component.errorMessage).toBe('An unexpected error occurred');
   });
 
   // ========== Tests Ollama / Génération de texte ==========
@@ -281,11 +315,11 @@ describe('TextComponent', () => {
     expect(ollamaSpy).toHaveBeenCalled();
     expect(component.generatedText).toBe('Generated AI text from Ollama');
     expect(component.pendingValidation).toBeTrue();
+    expect(component.errorVisible).toBeFalse();
   }));
 
   it('should not generate text when prompt is empty', fakeAsync(() => {
     localStorage.setItem('token', 'test-token');
-    const consoleErrorSpy = spyOn(console, 'error');
     const ollamaSpy = spyOn(ollamaService, 'addButtonOllama');
 
     component.text = 'Some text';
@@ -298,7 +332,6 @@ describe('TextComponent', () => {
 
   it('should not generate text when text is null or undefined', fakeAsync(() => {
     localStorage.setItem('token', 'test-token');
-    const consoleErrorSpy = spyOn(console, 'error');
     const ollamaSpy = spyOn(ollamaService, 'addButtonOllama');
 
     component.text = null as any;
@@ -316,7 +349,55 @@ describe('TextComponent', () => {
     component.handleModalAddSubmit({ name: 'Generate', context: '' });
     tick();
 
+    expect(consoleErrorSpy).toHaveBeenCalledWith('No authentication token found');
     expect(ollamaSpy).not.toHaveBeenCalled();
+  }));
+
+  it('should handle Ollama generation errors and show error modal', fakeAsync(() => {
+    localStorage.setItem('token', 'test-token');
+
+    spyOn(filesManagerService, 'getDirContent').and.returnValue(of('{}'));
+    spyOn(ollamaService, 'addButtonOllama').and.returnValue(
+      Promise.reject(new Error('Ollama service unavailable'))
+    );
+
+    component.currentFileID = 1;
+    component.text = 'Some text';
+
+    component.handleModalAddSubmit({ name: 'Generate', context: '' });
+    tick();
+
+    // Vérifier que l'erreur est loggée
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      'Error generating text with Ollama:',
+      jasmine.any(Error)
+    );
+
+    // Vérifier que le modal d'erreur est affiché
+    expect(component.errorVisible).toBeTrue();
+    expect(component.errorMessage).toBe('Error generating text with Ollama');
+
+    // Vérifier que le composant reste stable
+    expect(component.pendingValidation).toBeFalse();
+  }));
+
+  it('should handle error when getDirContent fails', fakeAsync(() => {
+    localStorage.setItem('token', 'test-token');
+
+    spyOn(filesManagerService, 'getDirContent').and.returnValue(
+      throwError(() => new Error('Failed to get directory content'))
+    );
+    const ollamaSpy = spyOn(ollamaService, 'addButtonOllama');
+
+    component.currentFileID = 1;
+    component.text = 'Some text';
+
+    component.handleModalAddSubmit({ name: 'Generate', context: '' });
+    tick();
+
+    expect(consoleErrorSpy).toHaveBeenCalled();
+    expect(ollamaSpy).not.toHaveBeenCalled();
+    expect(component.errorVisible).toBeTrue();
   }));
 
   // ========== Tests d'application/rejet du texte généré ==========
@@ -340,10 +421,36 @@ describe('TextComponent', () => {
 
     component.rejectGeneratedText();
 
-    expect(component.text).toBe('Initial text'); // Texte original inchangé
+    expect(component.text).toBe('Initial text');
     expect(component.generatedText).toBe('');
     expect(component.pendingValidation).toBeFalse();
   });
+
+  it('should handle save error when applying generated text', fakeAsync(() => {
+    localStorage.setItem('token', 'test-token');
+
+    spyOn(filesManagerService, 'saveFile').and.returnValue(
+      Promise.reject(new Error('Save failed'))
+    );
+
+    component.currentFileID = 1;
+    component.fileName = 'test.txt';
+    component.text = 'Initial text. ';
+    component.generatedText = 'Generated text.';
+    component.pendingValidation = true;
+
+    component.applyGeneratedText();
+    tick();
+
+    // Vérifier que le texte est appliqué même si la sauvegarde échoue
+    expect(component.text).toBe('Initial text. Generated text.');
+    expect(component.generatedText).toBe('');
+    expect(component.pendingValidation).toBeFalse();
+
+    // Vérifier que l'erreur est gérée
+    expect(consoleErrorSpy).toHaveBeenCalled();
+    expect(component.errorVisible).toBeTrue();
+  }));
 
   // ========== Tests de l'intégration avec MarkdownEditor ==========
 
@@ -359,7 +466,6 @@ describe('TextComponent', () => {
 
     expect(component.text).toBe('# Markdown Content');
 
-    // Vérifier que le binding fonctionne
     fixture.detectChanges();
     const editorElement = fixture.nativeElement.querySelector('app-markdown-editor');
     expect(editorElement).toBeTruthy();
@@ -377,12 +483,10 @@ describe('TextComponent', () => {
   it('should handle bidirectional binding with markdown editor', fakeAsync(() => {
     fixture.detectChanges();
 
-    // Simuler un changement depuis le composant parent
     component.text = '# Title\nContent';
     fixture.detectChanges();
     tick();
 
-    // Simuler un changement depuis l'éditeur
     component.onContentChange('# Updated Title\nUpdated content');
     expect(component.text).toBe('# Updated Title\nUpdated content');
   }));
@@ -403,13 +507,24 @@ describe('TextComponent', () => {
   it('should handle destroy when subscription is null', () => {
     (component as any).subscription = null;
 
-    // Ne devrait pas lancer d'erreur
     expect(() => component.ngOnDestroy()).not.toThrow();
   });
 
-  // ========== Tests de gestion des erreurs ==========
+  it('should clear autoSave timer on destroy', fakeAsync(() => {
+    fixture.detectChanges();
 
-  it('should handle file loading errors', fakeAsync(() => {
+    const timer = (component as any).autoSaveTimer;
+    expect(timer).toBeDefined();
+
+    component.ngOnDestroy();
+    tick();
+
+    expect((component as any).autoSaveTimer).toBeUndefined();
+  }));
+
+  // ========== Tests de gestion des erreurs de chargement ==========
+
+  it('should show error modal when file loading fails', fakeAsync(() => {
     localStorage.setItem('token', 'test-token');
 
     spyOn(filesManagerService, 'getFileInfo').and.returnValue(
@@ -418,37 +533,60 @@ describe('TextComponent', () => {
     spyOn(filesManagerService, 'getFileContent').and.returnValue(of(''));
 
     fixture.detectChanges();
-    sharedFilesService.emitFile(999); // Fichier inexistant
+    sharedFilesService.emitFile(999);
     tick();
 
-    // Le composant devrait gérer l'erreur sans crash
-    expect(component.currentFileID).toBe(999);
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      'Error loading file:',
+      jasmine.any(Error)
+    );
+    expect(component.errorVisible).toBeTrue();
+    expect(component.errorMessage).toBe('Failed to load the file');
   }));
 
-  it('should handle Ollama generation errors', fakeAsync(() => {
+// Lignes 545-565 dans text-component.component.spec.ts
+it('should handle auto-save errors and show error modal', fakeAsync(() => {
     localStorage.setItem('token', 'test-token');
 
-    spyOn(filesManagerService, 'getDirContent').and.returnValue(of('{}'));
-    spyOn(ollamaService, 'addButtonOllama').and.returnValue(
-      Promise.reject(new Error('Ollama service unavailable'))
+    // 1. Démarrer le cycle de vie sans laisser le setInterval s'exécuter
+    // car il pourrait causer une fuite de promesse lors de la première détection de changement
+    fixture.detectChanges();
+
+    // 2. Assurez-vous qu'un currentFileID est défini pour que save() s'exécute
+    component.currentFileID = 1;
+    component.fileName = 'test.txt';
+    component.text = 'content';
+
+    // 3. Spy du saveFile pour rejeter la promesse
+    const saveSpy = spyOn(filesManagerService, 'saveFile').and.returnValue(
+      Promise.reject(new Error('Network error'))
     );
 
-    component.currentFileID = 1;
-    component.text = 'Some text';
+    // 4. Déclencher manuellement le save() (ce qui est l'action de l'auto-save)
+    // Nous appelons la fonction 'save' directement pour simuler l'action de l'intervalle.
+    component.save();
 
-    component.handleModalAddSubmit({ name: 'Generate', context: '' });
-    tick();
+    // 5. Exécuter flushMicrotasks pour traiter la promesse rejetée de save()
+    // et son .catch() ou son try/catch interne.
+    flushMicrotasks();
 
-    // Vérifier que le composant reste stable après l'erreur
-    expect(component.pendingValidation).toBeFalse();
-  }));
+    // Vérifier que le save a été appelé et a échoué.
+    expect(saveSpy).toHaveBeenCalled();
+
+    // Vérifier que l'erreur est loggée et le modal affiché
+    expect(consoleErrorSpy).toHaveBeenCalledWith('Error saving file:', jasmine.any(Error));
+    expect(component.errorVisible).toBeTrue();
+    expect(component.errorMessage).toBe('Failed to save the file');
+
+    // 6. Vous pouvez supprimer l'appel à flush() et les lignes inutiles liées à l'auto-save timer.
+    // L'exécution directe de component.save() simule parfaitement le scénario d'erreur.
+}));
 
   // ========== Tests d'intégration complets ==========
 
   it('should complete full workflow: load, edit, save', fakeAsync(() => {
     localStorage.setItem('token', 'test-token');
 
-    // 1. Charger un fichier
     spyOn(filesManagerService, 'getFileInfo').and.returnValue(of({ name: 'doc.md' }));
     spyOn(filesManagerService, 'getFileContent').and.returnValue(of('# Original'));
     const saveSpy = spyOn(filesManagerService, 'saveFile').and.callThrough();
@@ -460,11 +598,9 @@ describe('TextComponent', () => {
     expect(component.text).toBe('# Original');
     expect(component.fileName).toBe('doc.md');
 
-    // 2. Éditer via markdown editor
     component.onContentChange('# Original\n\nNew paragraph');
     expect(component.text).toBe('# Original\n\nNew paragraph');
 
-    // 3. Sauvegarder
     component.save();
     tick();
 
@@ -474,6 +610,7 @@ describe('TextComponent', () => {
       'doc.md',
       '# Original\n\nNew paragraph'
     );
+    expect(component.errorVisible).toBeFalse();
   }));
 
   it('should complete AI generation workflow', fakeAsync(() => {
@@ -487,22 +624,38 @@ describe('TextComponent', () => {
     component.fileName = 'story.md';
     component.text = 'Once upon a time, ';
 
-    // 1. Générer du texte
     component.handleModalAddSubmit({ name: 'Continue the story', context: '' });
     tick();
 
     expect(component.generatedText).toBe('Generated AI text from Ollama');
     expect(component.pendingValidation).toBeTrue();
 
-    // 2. Appliquer le texte généré
     component.applyGeneratedText();
     expect(component.text).toBe('Once upon a time, Generated AI text from Ollama');
     expect(component.pendingValidation).toBeFalse();
 
-    // 3. Sauvegarder
-    component.save();
-    tick();
+    tick(); // Attendre la sauvegarde automatique
 
     expect(saveSpy).toHaveBeenCalled();
+    expect(component.errorVisible).toBeFalse();
+  }));
+
+  it('should handle complete workflow with errors', fakeAsync(() => {
+    localStorage.setItem('token', 'test-token');
+
+    // Simuler une erreur de chargement
+    spyOn(filesManagerService, 'getFileInfo').and.returnValue(
+      throwError(() => new Error('Load failed'))
+    );
+
+    fixture.detectChanges();
+    sharedFilesService.emitFile(1);
+    tick();
+
+    expect(component.errorVisible).toBeTrue();
+    expect(component.errorMessage).toBe('Failed to load the file');
+
+    // Le composant doit rester fonctionnel malgré l'erreur
+    expect(component.currentFileID).toBe(1);
   }));
 });

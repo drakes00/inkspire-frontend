@@ -1,5 +1,11 @@
 <div class="text"><p>{{ fileName }}</p></div>
 
+<app-error-modal
+  [visible]="errorVisible"
+  [message]="errorMessage"
+  (close)="errorVisible = false">
+</app-error-modal>
+
 @if (!pendingValidation) {
     <div class="text"><app-markdown-editor [content]="text" (contentChange)="onContentChange($event)"></app-markdown-editor></div>
 
