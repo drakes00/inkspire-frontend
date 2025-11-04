@@ -10,7 +10,7 @@ import { Subject, of, throwError } from 'rxjs';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ModalComponent } from '../modal/modal.component';
 
-// Mock du MarkdownEditorComponent avec comportement réaliste
+// Mock MarkdownEditorComponent with realistic behavior
 @Component({
   selector: 'app-markdown-editor',
   template: '<div #editor></div>',
@@ -91,13 +91,13 @@ describe('TextComponent', () => {
   let sharedFilesService: MockSharedFilesService;
   let ollamaService: OllamaService;
 
-  // Spy pour capturer les console.error sans polluer la console
+  // Spy on console.error to avoid polluting test output
   let consoleErrorSpy: jasmine.Spy;
 
   beforeEach(async () => {
     localStorage.clear();
 
-    // Spy sur console.error pour éviter la pollution de la console
+    // Spy on console.error to avoid polluting test output
     consoleErrorSpy = spyOn(console, 'error');
 
     await TestBed.configureTestingModule({
@@ -131,7 +131,7 @@ describe('TextComponent', () => {
     fixture.destroy();
   });
 
-  // ========== Tests de base ==========
+  // ========== Basic Tests ========== 
 
   it('should create', () => {
     expect(component).toBeTruthy();
@@ -147,7 +147,7 @@ describe('TextComponent', () => {
     expect(component.errorVisible).toBeFalse();
   });
 
-  // ========== Tests de chargement de fichier ==========
+  // ========== File Loading Tests ========== 
 
   it('should update text when a file is selected', fakeAsync(() => {
     localStorage.setItem('token', 'test-token');
@@ -206,7 +206,7 @@ describe('TextComponent', () => {
     expect(getFileContentSpy).toHaveBeenCalledTimes(2);
   }));
 
-  // ========== Tests de sauvegarde ==========
+  // ========== Save Tests ========== 
 
   it('should save a file successfully', async () => {
     localStorage.setItem('token', 'test-token');
@@ -258,21 +258,21 @@ describe('TextComponent', () => {
     component.fileName = 'test.txt';
     component.text = 'some content';
 
-    // La méthode ne doit PAS throw, mais gérer l'erreur en interne
+    // The method should not throw, but handle the error internally
     await component.save();
 
-    // Vérifier que l'erreur est loggée
+    // Check that the error is logged
     expect(consoleErrorSpy).toHaveBeenCalledWith(
       'Error saving file:',
       jasmine.any(Error)
     );
 
-    // Vérifier que le modal d'erreur est affiché
+    // Check that the error modal is displayed
     expect(component.errorVisible).toBeTrue();
     expect(component.errorMessage).toBe('Failed to save the file');
   });
 
-  // ========== Tests de la modal ==========
+  // ========== Modal Tests ========== 
 
   it('should show modal when showModalAdd is called', () => {
     expect(component.isModalVisibleAdd).toBeFalse();
@@ -298,7 +298,7 @@ describe('TextComponent', () => {
     expect(component.errorMessage).toBe('An unexpected error occurred');
   });
 
-  // ========== Tests Ollama / Génération de texte ==========
+  // ========== Ollama / Text Generation Tests ========== 
 
   it('should generate text with Ollama', fakeAsync(() => {
     localStorage.setItem('token', 'test-token');
@@ -367,17 +367,17 @@ describe('TextComponent', () => {
     component.handleModalAddSubmit({ name: 'Generate', context: '' });
     tick();
 
-    // Vérifier que l'erreur est loggée
+    // Check that the error is logged
     expect(consoleErrorSpy).toHaveBeenCalledWith(
       'Error generating text with Ollama:',
       jasmine.any(Error)
     );
 
-    // Vérifier que le modal d'erreur est affiché
+    // Check that the error modal is displayed
     expect(component.errorVisible).toBeTrue();
     expect(component.errorMessage).toBe('Error generating text with Ollama');
 
-    // Vérifier que le composant reste stable
+    // Check that the component remains stable
     expect(component.pendingValidation).toBeFalse();
   }));
 
@@ -400,7 +400,7 @@ describe('TextComponent', () => {
     expect(component.errorVisible).toBeTrue();
   }));
 
-  // ========== Tests d'application/rejet du texte généré ==========
+  // ========== Generated Text Application/Rejection Tests ========== 
 
   it('should apply generated text to existing text', () => {
     component.text = 'Initial text. ';
@@ -442,17 +442,17 @@ describe('TextComponent', () => {
     component.applyGeneratedText();
     tick();
 
-    // Vérifier que le texte est appliqué même si la sauvegarde échoue
+    // Check that the text is applied even if the save fails
     expect(component.text).toBe('Initial text. Generated text.');
     expect(component.generatedText).toBe('');
     expect(component.pendingValidation).toBeFalse();
 
-    // Vérifier que l'erreur est gérée
+    // Check that the error is handled
     expect(consoleErrorSpy).toHaveBeenCalled();
     expect(component.errorVisible).toBeTrue();
   }));
 
-  // ========== Tests de l'intégration avec MarkdownEditor ==========
+  // ========== MarkdownEditor Integration Tests ========== 
 
   it('should pass content to markdown editor', fakeAsync(() => {
     localStorage.setItem('token', 'test-token');
@@ -491,7 +491,7 @@ describe('TextComponent', () => {
     expect(component.text).toBe('# Updated Title\nUpdated content');
   }));
 
-  // ========== Tests de nettoyage (lifecycle) ==========
+  // ========== Lifecycle (Cleanup) Tests ========== 
 
   it('should unsubscribe on destroy', () => {
     fixture.detectChanges();
@@ -522,7 +522,7 @@ describe('TextComponent', () => {
     expect((component as any).autoSaveTimer).toBeUndefined();
   }));
 
-  // ========== Tests de gestion des erreurs de chargement ==========
+  // ========== Load Error Handling Tests ========== 
 
   it('should show error modal when file loading fails', fakeAsync(() => {
     localStorage.setItem('token', 'test-token');
@@ -544,45 +544,38 @@ describe('TextComponent', () => {
     expect(component.errorMessage).toBe('Failed to load the file');
   }));
 
-// Lignes 545-565 dans text-component.component.spec.ts
 it('should handle auto-save errors and show error modal', fakeAsync(() => {
     localStorage.setItem('token', 'test-token');
 
-    // 1. Démarrer le cycle de vie sans laisser le setInterval s'exécuter
-    // car il pourrait causer une fuite de promesse lors de la première détection de changement
+    // 1. Start component lifecycle.
     fixture.detectChanges();
 
-    // 2. Assurez-vous qu'un currentFileID est défini pour que save() s'exécute
+    // 2. Set a file ID so that save() will execute.
     component.currentFileID = 1;
     component.fileName = 'test.txt';
     component.text = 'content';
 
-    // 3. Spy du saveFile pour rejeter la promesse
+    // 3. Spy on saveFile to reject the promise.
     const saveSpy = spyOn(filesManagerService, 'saveFile').and.returnValue(
       Promise.reject(new Error('Network error'))
     );
 
-    // 4. Déclencher manuellement le save() (ce qui est l'action de l'auto-save)
-    // Nous appelons la fonction 'save' directement pour simuler l'action de l'intervalle.
+    // 4. Manually trigger save() to simulate the auto-save interval's action.
     component.save();
 
-    // 5. Exécuter flushMicrotasks pour traiter la promesse rejetée de save()
-    // et son .catch() ou son try/catch interne.
+    // 5. Flush microtasks to process the rejected promise from save().
     flushMicrotasks();
 
-    // Vérifier que le save a été appelé et a échoué.
+    // Check that save was called and failed.
     expect(saveSpy).toHaveBeenCalled();
 
-    // Vérifier que l'erreur est loggée et le modal affiché
+    // Check that the error is logged and the modal is displayed.
     expect(consoleErrorSpy).toHaveBeenCalledWith('Error saving file:', jasmine.any(Error));
     expect(component.errorVisible).toBeTrue();
     expect(component.errorMessage).toBe('Failed to save the file');
-
-    // 6. Vous pouvez supprimer l'appel à flush() et les lignes inutiles liées à l'auto-save timer.
-    // L'exécution directe de component.save() simule parfaitement le scénario d'erreur.
 }));
 
-  // ========== Tests d'intégration complets ==========
+  // ========== Full Workflow Integration Tests ========== 
 
   it('should complete full workflow: load, edit, save', fakeAsync(() => {
     localStorage.setItem('token', 'test-token');
@@ -634,7 +627,7 @@ it('should handle auto-save errors and show error modal', fakeAsync(() => {
     expect(component.text).toBe('Once upon a time, Generated AI text from Ollama');
     expect(component.pendingValidation).toBeFalse();
 
-    tick(); // Attendre la sauvegarde automatique
+    tick(); // Wait for auto-save
 
     expect(saveSpy).toHaveBeenCalled();
     expect(component.errorVisible).toBeFalse();
@@ -643,7 +636,7 @@ it('should handle auto-save errors and show error modal', fakeAsync(() => {
   it('should handle complete workflow with errors', fakeAsync(() => {
     localStorage.setItem('token', 'test-token');
 
-    // Simuler une erreur de chargement
+    // Simulate a loading error
     spyOn(filesManagerService, 'getFileInfo').and.returnValue(
       throwError(() => new Error('Load failed'))
     );
@@ -655,7 +648,7 @@ it('should handle auto-save errors and show error modal', fakeAsync(() => {
     expect(component.errorVisible).toBeTrue();
     expect(component.errorMessage).toBe('Failed to load the file');
 
-    // Le composant doit rester fonctionnel malgré l'erreur
+    // The component should remain functional despite the error
     expect(component.currentFileID).toBe(1);
   }));
 });
