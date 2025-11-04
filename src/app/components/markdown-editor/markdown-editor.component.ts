@@ -1,4 +1,4 @@
-import { Component, ElementRef, Input, Output, EventEmitter, AfterViewInit, OnDestroy, ViewChild, OnInit } from '@angular/core';
+import { Component, ElementRef, Input, Output, EventEmitter, AfterViewInit, OnDestroy, ViewChild, OnInit, OnChanges, SimpleChanges } from '@angular/core';
 import Editor from '@toast-ui/editor';
 
 @Component({
@@ -7,13 +7,22 @@ import Editor from '@toast-ui/editor';
   styleUrls: ['./markdown-editor.component.css'],
   standalone: true,
 })
-export class MarkdownEditorComponent implements AfterViewInit, OnDestroy, OnInit {
+export class MarkdownEditorComponent implements AfterViewInit, OnDestroy, OnInit, OnChanges {
   @ViewChild('editor') private editorRef!: ElementRef;
   @Input() content: string = '';
   @Output() contentChange = new EventEmitter<string>();
 
   private editor!: Editor;
   private themeObserver!: MutationObserver;
+
+  ngOnChanges(changes: SimpleChanges) {
+    if (this.editor && changes['content']) {
+      const currentValue = changes['content'].currentValue;
+      if (currentValue !== this.editor.getMarkdown()) {
+        this.editor.setMarkdown(currentValue);
+      }
+    }
+  }
 
   ngOnInit() {
     // Observer les changements de classe sur le body
