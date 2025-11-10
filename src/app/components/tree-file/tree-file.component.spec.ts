@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed, fakeAsync, tick } from "@angular/core/testing";
+import { Router } from "@angular/router";
 import { of, throwError } from "rxjs";
 import { HttpClientTestingModule } from "@angular/common/http/testing";
 import { TreeFileComponent } from "./tree-file.component";
@@ -31,6 +32,7 @@ class MockFilesManagerService {
     addDir = jasmine.createSpy("addDir").and.returnValue(of({}));
     delFile = jasmine.createSpy("delFile").and.returnValue(of({}));
     delDir = jasmine.createSpy("delDir").and.returnValue(of({}));
+    logout = jasmine.createSpy("logout").and.returnValue(of({}));
 }
 
 // Mock implementation of SharedFilesService for isolated testing.
@@ -43,6 +45,7 @@ describe("TreeFileComponent", () => {
     let component: TreeFileComponent;
     let mockFilesManagerService: MockFilesManagerService;
     let mockSharedFilesService: MockSharedFilesService;
+    let router: Router;
 
     beforeEach(async () => {
         // Create instances of the mock services.
@@ -67,6 +70,7 @@ describe("TreeFileComponent", () => {
         // Create the component fixture and instance.
         fixture = TestBed.createComponent(TreeFileComponent);
         component = fixture.componentInstance;
+        router = TestBed.inject(Router);
         fixture.detectChanges(); // Trigger initial data binding.
     });
 
@@ -442,6 +446,63 @@ describe("TreeFileComponent", () => {
 
             expect(mockSharedFilesService.setSelectedFile).toHaveBeenCalledWith(null);
             expect(component.selectedNode).toBeNull();
+        });
+    });
+
+    describe("Logout Actions", () => {
+        let consoleErrorSpy: jasmine.Spy;
+
+        beforeEach(() => {
+            consoleErrorSpy = spyOn(console, 'error');
+            spyOn(router, 'navigate'); // Spy on router.navigate
+            spyOn(localStorage, 'removeItem'); // Spy on localStorage.removeItem
+            component.dataSource.data = [{ id: 1, name: "File", type: "F" }]; // Populate data for clearing test
+            component.selectedNode = { id: 1, name: "File", expandable: false, level: 0 }; // Select a node for clearing test
+        });
+
+        it("should call filesManagerService.logout, clear local storage, clear shared file, clear data source and navigate to login on successful logout", fakeAsync(() => {
+            spyOn(localStorage, "getItem").and.returnValue("test-token");
+            mockFilesManagerService.logout.and.returnValue(of({})); // Ensure successful server logout
+
+            component.logout();
+            tick(); // Advance time for observable to complete
+
+            expect(mockFilesManagerService.logout).toHaveBeenCalledWith("test-token");
+            expect(localStorage.removeItem).toHaveBeenCalledWith("token");
+            expect(mockSharedFilesService.setSelectedFile).toHaveBeenCalledWith(null);
+            expect(component.dataSource.data).toEqual([]);
+            expect(router.navigate).toHaveBeenCalledWith(["/login"]);
+            expect(consoleErrorSpy).not.toHaveBeenCalled();
+        }));
+
+        it("should perform client-side logout even if server logout fails", fakeAsync(() => {
+            spyOn(localStorage, "getItem").and.returnValue("test-token");
+            mockFilesManagerService.logout.and.returnValue(throwError(() => new Error("Server error"))); // Simulate server logout failure
+
+            component.logout();
+            tick(); // Advance time for observable to complete
+
+            expect(mockFilesManagerService.logout).toHaveBeenCalledWith("test-token");
+            expect(localStorage.removeItem).toHaveBeenCalledWith("token");
+            expect(mockSharedFilesService.setSelectedFile).toHaveBeenCalledWith(null);
+            expect(component.dataSource.data).toEqual([]);
+            expect(router.navigate).toHaveBeenCalledWith(["/login"]);
+            expect(consoleErrorSpy).toHaveBeenCalledWith("Server logout failed, proceeding with client-side logout.", jasmine.any(Error));
+        }));
+
+        it("should navigate to login if no token is found locally", () => {
+            spyOn(localStorage, "getItem").and.returnValue(null);
+
+            component.logout();
+
+            expect(mockFilesManagerService.logout).not.toHaveBeenCalled(); // Server logout should not be attempted
+            expect(localStorage.removeItem).not.toHaveBeenCalled(); // No token to remove
+            expect(mockSharedFilesService.setSelectedFile).not.toHaveBeenCalled(); // No file to unselect
+            // dataSource.data should not be cleared if no token was present to begin with,
+            // as updateTree() would have already cleared it or it would be empty.
+            // The primary action here is navigation.
+            expect(router.navigate).toHaveBeenCalledWith(["/login"]);
+            expect(consoleErrorSpy).not.toHaveBeenCalled();
         });
     });
 });

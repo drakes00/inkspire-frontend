@@ -205,4 +205,19 @@ export class FilesManagerService {
 
         return this.http.post(url, content, { headers, responseType: "text" });
     }
+
+    /**
+     * Logs the user out by calling the server's logout endpoint.
+     * @param token The authentication token.
+     * @returns An Observable that completes on successful logout.
+     */
+    public logout(token: string): Observable<any> {
+        const url = '/logout'; // The route from SecurityController
+        const headers = new HttpHeaders({
+            Authorization: `Bearer ${token}`,
+        });
+
+        // A GET request should be sufficient as per Symfony's firewall config
+        return this.http.get(url, { headers });
+    }
 }

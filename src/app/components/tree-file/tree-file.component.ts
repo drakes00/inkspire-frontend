@@ -12,6 +12,7 @@ import { SharedFilesService } from "../../services/shared-files.service";
 import { ThemeService } from "../../services/theme.service";
 import { ConfirmationDialogComponent } from "../confirmation-dialog/confirmation-dialog.component";
 import { ErrorModalComponent } from "../error-modal/error-modal.component";
+import { Router } from "@angular/router";
 
 /**
  * Represents a flattened node used by the Material tree control.
@@ -132,6 +133,7 @@ export class TreeFileComponent {
         private shareFiles: SharedFilesService,
         private cdr: ChangeDetectorRef,
         public themeService: ThemeService,
+        private router: Router,
     ) {
         this.updateTree();
     }
@@ -555,5 +557,42 @@ export class TreeFileComponent {
      */
     removeLoading(): void {
         document.body.classList.remove("loading");
+    }
+
+    /**
+     * Logs the user out by clearing the session on both server and client,
+     * and redirecting to the login page.
+     */
+    logout(): void {
+        const token = localStorage.getItem("token");
+        if (!token) {
+            // If there's no token, just ensure we're on the login page
+            this.router.navigate(["/login"]);
+            return;
+        }
+
+        this.filesManagerService.logout(token).subscribe({
+            next: () => {
+                // This runs on successful server logout
+                this.performClientSideLogout();
+            },
+            error: (err) => {
+                // Even if the server call fails (e.g., network error, expired token),
+                // we should still log the user out on the client side.
+                console.error("Server logout failed, proceeding with client-side logout.", err);
+                this.performClientSideLogout();
+            }
+        });
+    }
+
+    /**
+     * Performs the client-side cleanup for logout.
+     */
+    private performClientSideLogout(): void {
+        localStorage.removeItem("token");
+        this.shareFiles.setSelectedFile(null);
+        this.dataSource.data = [];
+        this.router.navigate(["/login"]);
+        this.cdr.markForCheck(); // Trigger change detection to clear the tree view
     }
 }
