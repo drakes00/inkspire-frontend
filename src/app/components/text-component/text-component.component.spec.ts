@@ -513,6 +513,10 @@ describe('TextComponent', () => {
   it('should clear autoSave timer on destroy', fakeAsync(() => {
     fixture.detectChanges();
 
+    // Simulate a file being selected to ensure the timer is started.
+    sharedFilesService.emitFile(1);
+    tick();
+
     const timer = (component as any).autoSaveTimer;
     expect(timer).toBeDefined();
 

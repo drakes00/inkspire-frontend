@@ -96,13 +96,27 @@ export class TextComponent implements OnInit, OnDestroy {
      */
     ngOnInit() {
         this.subscription = this.shareFiles.selectedFile$.subscribe(file => {
-            if (file && !this.isDestroyed) {
+            if (this.isDestroyed) {
+                return;
+            }
+
+            // Stop any existing timer when selection changes
+            if (this.autoSaveTimer) {
+                window.clearInterval(this.autoSaveTimer);
+                this.autoSaveTimer = undefined;
+            }
+
+            if (file) {
                 this.currentFileID = file;
                 this.updateText(this.currentFileID);
+                this.startAutoSave(); // Start auto-save when a file is loaded
+            } else {
+                // If file is null, clear the editor state
+                this.currentFileID = 0;
+                this.fileName = "";
+                this.text = "";
             }
         });
-
-        this.startAutoSave();
     }
 
     /**
