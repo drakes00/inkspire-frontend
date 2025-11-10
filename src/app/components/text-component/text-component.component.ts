@@ -4,7 +4,7 @@ import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatInputModule} from '@angular/material/input';
 import {ModalComponent} from '../modal/modal.component';
 import {SharedFilesService} from '../../services/shared-files.service';
-import {Subscription, forkJoin} from 'rxjs';
+import {Subscription, forkJoin, firstValueFrom} from 'rxjs';
 import {FilesManagerService} from '../../services/files-manager.service';
 import {OllamaService} from '../../services/ollama.service';
 import {MarkdownEditorComponent} from '../markdown-editor/markdown-editor.component';
@@ -167,12 +167,11 @@ export class TextComponent implements OnInit, OnDestroy {
         const userToken = localStorage.getItem("token");
         if (userToken && this.currentFileID !== 0) {
             try {
-                await this.filesManager.saveFile(
+                await firstValueFrom(this.filesManager.updateFileContent(
                     this.currentFileID,
                     userToken,
-                    this.fileName,
                     this.text
-                );
+                ));
             } catch (error) {
                 console.error('Error saving file:', error);
                 this.showErrorModal('Failed to save the file');

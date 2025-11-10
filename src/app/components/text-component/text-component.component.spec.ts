@@ -65,8 +65,8 @@ class MockFilesManagerService {
     return of('file content');
   }
 
-  saveFile(fileId: number, token: string, fileName: string, content: string): Promise<string> {
-    return Promise.resolve(JSON.stringify({ success: true }));
+  updateFileContent(fileId: number, token: string, content: string) {
+    return of(null);
   }
 
   getDirContent(fileId: number, token: string) {
@@ -211,7 +211,7 @@ describe('TextComponent', () => {
   it('should save a file successfully', async () => {
     localStorage.setItem('token', 'test-token');
 
-    const saveSpy = spyOn(filesManagerService, 'saveFile').and.callThrough();
+    const saveSpy = spyOn(filesManagerService, 'updateFileContent').and.callThrough();
 
     component.currentFileID = 1;
     component.fileName = 'test.txt';
@@ -219,12 +219,12 @@ describe('TextComponent', () => {
 
     await component.save();
 
-    expect(saveSpy).toHaveBeenCalledWith(1, 'test-token', 'test.txt', 'some content');
+    expect(saveSpy).toHaveBeenCalledWith(1, 'test-token', 'some content');
     expect(component.errorVisible).toBeFalse();
   });
 
   it('should not save when no token is available', async () => {
-    const saveSpy = spyOn(filesManagerService, 'saveFile');
+    const saveSpy = spyOn(filesManagerService, 'updateFileContent');
 
     component.currentFileID = 1;
     component.fileName = 'test.txt';
@@ -237,7 +237,7 @@ describe('TextComponent', () => {
 
   it('should not save when currentFileID is 0', async () => {
     localStorage.setItem('token', 'test-token');
-    const saveSpy = spyOn(filesManagerService, 'saveFile');
+    const saveSpy = spyOn(filesManagerService, 'updateFileContent');
 
     component.currentFileID = 0;
     component.text = 'some content';
@@ -250,8 +250,8 @@ describe('TextComponent', () => {
   it('should handle save errors gracefully and show error modal', async () => {
     localStorage.setItem('token', 'test-token');
 
-    spyOn(filesManagerService, 'saveFile').and.returnValue(
-      Promise.reject(new Error('Network error'))
+    spyOn(filesManagerService, 'updateFileContent').and.returnValue(
+      throwError(() => new Error('Network error'))
     );
 
     component.currentFileID = 1;
@@ -429,8 +429,8 @@ describe('TextComponent', () => {
   it('should handle save error when applying generated text', fakeAsync(() => {
     localStorage.setItem('token', 'test-token');
 
-    spyOn(filesManagerService, 'saveFile').and.returnValue(
-      Promise.reject(new Error('Save failed'))
+    spyOn(filesManagerService, 'updateFileContent').and.returnValue(
+      throwError(() => new Error('Save failed'))
     );
 
     component.currentFileID = 1;
@@ -555,9 +555,9 @@ it('should handle auto-save errors and show error modal', fakeAsync(() => {
     component.fileName = 'test.txt';
     component.text = 'content';
 
-    // 3. Spy on saveFile to reject the promise.
-    const saveSpy = spyOn(filesManagerService, 'saveFile').and.returnValue(
-      Promise.reject(new Error('Network error'))
+    // 3. Spy on updateFileContent to reject the promise.
+    const saveSpy = spyOn(filesManagerService, 'updateFileContent').and.returnValue(
+      throwError(() => new Error('Network error'))
     );
 
     // 4. Manually trigger save() to simulate the auto-save interval's action.
@@ -582,7 +582,7 @@ it('should handle auto-save errors and show error modal', fakeAsync(() => {
 
     spyOn(filesManagerService, 'getFileInfo').and.returnValue(of({ name: 'doc.md' }));
     spyOn(filesManagerService, 'getFileContent').and.returnValue(of('# Original'));
-    const saveSpy = spyOn(filesManagerService, 'saveFile').and.callThrough();
+    const saveSpy = spyOn(filesManagerService, 'updateFileContent').and.callThrough();
 
     fixture.detectChanges();
     sharedFilesService.emitFile(5);
@@ -600,7 +600,6 @@ it('should handle auto-save errors and show error modal', fakeAsync(() => {
     expect(saveSpy).toHaveBeenCalledWith(
       5,
       'test-token',
-      'doc.md',
       '# Original\n\nNew paragraph'
     );
     expect(component.errorVisible).toBeFalse();
@@ -611,7 +610,7 @@ it('should handle auto-save errors and show error modal', fakeAsync(() => {
 
     spyOn(filesManagerService, 'getDirContent').and.returnValue(of('{}'));
     spyOn(ollamaService, 'addButtonOllama').and.callThrough();
-    const saveSpy = spyOn(filesManagerService, 'saveFile').and.callThrough();
+    const saveSpy = spyOn(filesManagerService, 'updateFileContent').and.callThrough();
 
     component.currentFileID = 1;
     component.fileName = 'story.md';

@@ -430,4 +430,62 @@ describe("FilesManagerService", () => {
             req.flush("Error", { status: 404, statusText: "Not Found" });
         });
     });
+
+    describe("updateFileContent", () => {
+        it("should send POST request with content and correct headers", () => {
+            const fileId = 1;
+            const token = "test-token";
+            const content = "new file content";
+
+            service.updateFileContent(fileId, token, content).subscribe(response => {
+                expect(response).toBe("");
+            });
+
+            const req = httpMock.expectOne(`/api/file/${fileId}/contents`);
+            expect(req.request.method).toBe("POST");
+            expect(req.request.headers.get("Authorization")).toBe("Bearer " + token);
+            expect(req.request.headers.get("Content-Type")).toBe("text/plain");
+            expect(req.request.body).toBe(content);
+
+            req.flush("", { status: 204, statusText: "No Content" });
+        });
+
+        it("should handle unauthorized error", () => {
+            const fileId = 1;
+            const token = "invalid-token";
+            const content = "some content";
+
+            service.updateFileContent(fileId, token, content).subscribe({
+                next: () => fail("should have failed with 401 error"),
+                error: (error) => {
+                    expect(error.status).toBe(401);
+                },
+            });
+
+            const req = httpMock.expectOne(`/api/file/${fileId}/contents`);
+            req.flush("Unauthorized", {
+                status: 401,
+                statusText: "Unauthorized",
+            });
+        });
+
+        it("should handle not found error", () => {
+            const fileId = 999; // An ID that doesn't exist
+            const token = "test-token";
+            const content = "some content";
+
+            service.updateFileContent(fileId, token, content).subscribe({
+                next: () => fail("should have failed with 404 error"),
+                error: (error) => {
+                    expect(error.status).toBe(404);
+                },
+            });
+
+            const req = httpMock.expectOne(`/api/file/${fileId}/contents`);
+            req.flush("Not Found", {
+                status: 404,
+                statusText: "Not Found",
+            });
+        });
+    });
 });

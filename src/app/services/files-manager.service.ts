@@ -189,23 +189,20 @@ export class FilesManagerService {
         return this.http.get(url, { headers, responseType: 'text' });
     }
 
-    public async saveFile(id: number, token: string, name: string, content: string) {
-        console.log(content);
-        // let url = "http://localhost:8000/api/v1/file/save"
-        // let contentType = "application/json"
-        // let body = JSON.stringify({id : id, token : token, name : name, content : content})
+    /**
+     * Updates the content of a specific file.
+     * @param id The ID of the file to update.
+     * @param token The authentication token for the user.
+     * @param content The new content of the file.
+     * @returns An Observable that completes when the file is saved.
+     */
+    public updateFileContent(id: number, token: string, content: string): Observable<any> {
+        const url = `/api/file/${id}/contents`;
+        const headers = new HttpHeaders({
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "text/plain",
+        });
 
-        // let response = await fetch(url, {
-        // 	method: "POST",
-        // 	body: body,
-        // 	headers: {
-        // 		Accept: contentType,
-        // 		'Content-Type': contentType,
-        // 	}
-        // });
-
-        // const rawData = await response.json();
-        // return JSON.stringify(rawData);
-        return Promise.resolve(JSON.stringify({}));
+        return this.http.post(url, content, { headers, responseType: "text" });
     }
 }
