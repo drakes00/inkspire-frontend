@@ -30,30 +30,45 @@ body.dark-theme {
   --icon-color: #bdbdbd;
 }
 
+html, body {
+  height: 100%;
+}
 
-html, body { height: 100%; }
 body {
-    margin: 0;
-    font-family: Roboto, "Helvetica Neue", sans-serif;
-    background-color: var(--background-color);
-    color: var(--text-color);
-    transition: background-color 0.3s, color 0.3s;
+  margin: 0;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+  background-color: var(--background-color);
+  color: var(--text-color);
+  transition: background-color 0.3s, color 0.3s;
 }
 
 .loading {
-    position: fixed; /* To cover the whole screen */
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.3) !important;
-    filter: brightness(70%);
-    background: url('//upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Phi_fenomeni.gif/50px-Phi_fenomeni.gif')
-    top center no-repeat; /* Center the gif */
-    z-index: 9999; /* Make sure it is on top of other elements */
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.3) !important;
+  filter: brightness(70%);
+  background: url('//upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Phi_fenomeni.gif/50px-Phi_fenomeni.gif')
+    top center no-repeat;
+  z-index: 9999;
 }
 
-/* Styles for Angular Material components in dark theme */
+/* Dark theme styles for Angular Material components */
+.dark-theme {
+  /* Material Design variables */
+  --mat-form-field-filled-input-text-color: var(--text-color);
+  --mat-sys-on-surface: var(--text-color);
+  --mdc-filled-text-field-container-color: var(--component-background);
+  --mdc-filled-text-field-label-text-color: var(--text-color);
+  --mdc-filled-text-field-input-text-color: var(--text-color);
+  --mdc-filled-text-field-disabled-container-color: #2a2a2a;
+  --mdc-filled-text-field-focus-label-text-color: var(--primary-color);
+  --mdc-filled-text-field-focus-active-indicator-color: var(--primary-color);
+}
+
+/* Menu components */
 .dark-theme .mat-mdc-menu-panel {
   background-color: var(--component-background);
 }
@@ -68,4 +83,38 @@ body {
 
 .dark-theme .mat-mdc-menu-item:hover {
   background-color: var(--hover-color);
+}
+
+/* Form field components */
+.dark-theme .mat-mdc-form-field .mdc-text-field--filled {
+  background-color: var(--component-background) !important;
+}
+
+.dark-theme .mat-mdc-form-field:hover .mdc-text-field--filled {
+  background-color: var(--hover-color) !important;
+}
+
+.dark-theme .mat-mdc-form-field .mat-mdc-input-element {
+  color: var(--text-color);
+  caret-color: var(--primary-color);
+}
+
+.dark-theme .mat-mdc-form-field-hint,
+.dark-theme .mat-mdc-form-field-error {
+  color: var(--text-color);
+  opacity: 0.6;
+}
+
+.dark-theme .mat-mdc-floating-label {
+  color: var(--text-color);
+  opacity: 0.6;
+}
+
+.dark-theme .mat-mdc-form-field.mat-focused .mat-mdc-floating-label {
+  color: var(--primary-color);
+  opacity: 1;
+}
+
+.dark-theme .mdc-line-ripple::before {
+  border-bottom-color: var(--border-color);
 }
