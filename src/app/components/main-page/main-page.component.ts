@@ -1,13 +1,15 @@
 import { Component, OnInit } from '@angular/core';
 import { TextComponent } from "../text-component/text-component.component";
 import { TreeFileComponent } from '../tree-file/tree-file.component';
+import { ModelComponent } from '../model-component/model-component.component';
 import { FilesManagerService } from '../../services/files-manager.service';
 import { Router } from '@angular/router';
 
 
 @Component({
     selector: 'app-main-page',
-    imports: [TreeFileComponent, TextComponent],
+    standalone: true,
+    imports: [TreeFileComponent, TextComponent, ModelComponent],
     templateUrl: './main-page.component.html',
     styleUrl: './main-page.component.css'
 })

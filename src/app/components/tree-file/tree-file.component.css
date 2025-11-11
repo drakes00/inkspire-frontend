@@ -3,7 +3,7 @@
  * It fills the vertical space of the viewport and sets up a flex column layout.
  */
 .file-system-container {
-    height: 100vh;
+    height: 100%;
     display: flex;
     flex-direction: column;
     background-color: var(--component-background);
