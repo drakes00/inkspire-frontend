@@ -4,6 +4,10 @@
 
 # InkSpire Frontend
 
+## ⚠️ WARNING: Under Heavy Development ⚠️
+
+**This project is currently under active and heavy development. It is NOT ready for general use and may contain bugs, incomplete features, or breaking changes. Use at your own risk.**
+
 ![](https://github.com/drakes00/inkspire-frontend/actions/workflows/test.yaml/badge.svg)
 
 InkSpire is a modern web-based text editor designed for writers who want to leverage the power of AI to enhance their creative process. It provides a clean and organized interface for managing files and directories, along with AI-powered tools to rephrase, translate, and generate text.
