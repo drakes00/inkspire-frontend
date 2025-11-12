@@ -25,6 +25,7 @@
 }
 
 .title-bar span {
+    color: var(--primary-color);
     font-weight: bold;
     position: absolute;
     left: 50%;
@@ -109,7 +110,7 @@
  * Provides visual feedback when the mouse is over a node.
  */
 .mdc-tree-node:hover {
-    background-color: var(--hover-color);
+    background-color: var(--hover-background);
 }
 
 /*
@@ -117,8 +118,8 @@
  * Highlights the node with a different background color and a left border.
  */
 .selected-node {
-    background-color: var(--selected-background) !important;
-    border-left: 3px solid var(--selected-border);
+    background-color: color-mix(in srgb, rgba(0, 0, 0, 0.87) 20%, transparent);
+    border-left: 5px solid var(--selected-border);
 }
 
 /*

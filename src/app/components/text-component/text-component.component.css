@@ -12,41 +12,13 @@
 }
 
 button {
-  background-color: var(--primary-color);
-  color: var(--text-color);
-  border: none;
-  padding: 10px 20px;
-  border-radius: 5px;
-  margin: 2px;
-  font-family: Verdana, Geneva, Tahoma, sans-serif;
-  font-weight: bold;
-  cursor: pointer;
-  transition: filter 0.2s;
-}
-
-button:hover {
-  filter: brightness(110%);
+  margin-top: 50px;
 }
 
 .text {
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-textarea {
-  border: 1px solid var(--border-color);
-  background-color: var(--component-background);
-  color: var(--text-color);
-  padding: 10px;
-  font-family: Roboto, "Helvetica Neue", sans-serif;
-  border-radius: 4px;
-  resize: vertical;
-}
-
-textarea:focus {
-  outline: none;
-  border-color: var(--primary-color);
 }
 
 app-markdown-editor {

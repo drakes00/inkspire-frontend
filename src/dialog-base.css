@@ -31,6 +31,8 @@
     border-radius: 10px;
     box-shadow: 0 5px 15px var(--box-shadow-color);
     width: 90%;
+    max-width: 500px;
+    text-align: center;
 }
 
 .dialog-actions {
@@ -50,30 +52,17 @@
     cursor: pointer;
     font-weight: bold;
     transition: background-color 0.2s, opacity 0.2s;
-}
-
-/* Primary action button (e.g., "Validate", "Save") */
-.dialog-actions button.primary {
-    background-color: var(--primary-color);
-    color: #fff;
-}
-
-.dialog-actions button.primary:hover {
-    opacity: 0.9;
+    background-color: var(--button-color);
+    color: var(--text-color);
 }
 
 /* Danger action button (e.g., "Delete", "Confirm Removal") */
 .dialog-actions button.danger {
     background-color: #e53935; /* Red */
-    color: white;
+    color: var(--text-color);
 }
 
 .dialog-actions button.danger:hover {
     background-color: #c62828;
-}
-
-/* Secondary action button (e.g., "Cancel") */
-.dialog-actions button.secondary {
-    background-color: var(--hover-color);
     color: var(--text-color);
 }
