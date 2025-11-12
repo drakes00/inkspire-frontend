@@ -44,7 +44,9 @@ describe("ModalComponent", () => {
         component.contextValue = "My context";
         fixture.detectChanges();
 
-        const validateButton = fixture.nativeElement.querySelector("button.primary");
+        const validateButton = fixture.nativeElement.querySelector(".dialog-actions button:last-child");
+        // Add a check to ensure the button was found, for robustness
+        expect(validateButton).toBeTruthy();
         validateButton.click();
 
         expect(component.validate.emit).toHaveBeenCalledWith({
