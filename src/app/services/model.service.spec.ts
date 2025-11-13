@@ -26,8 +26,8 @@ describe('ModelService', () => {
   describe('getModels', () => {
     it('should return an Observable<Model[]>', () => {
       const dummyModels: Model[] = [
-        { id: 1, name: 'llama3.3:70b' },
-        { id: 2, name: 'gemma3:7b' }
+        { name: 'Llama3' },
+        { name: 'Gemma' }
       ];
       const token = 'test-token';
 

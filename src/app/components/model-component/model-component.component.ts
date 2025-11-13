@@ -19,7 +19,7 @@ import { Model, ModelService } from '../../services/model.service';
 })
 export class ModelComponent implements OnInit {
   models: Model[] = [];
-  selectedModelId: number | null = null;
+  selectedModelName: string | null = null;
 
   constructor(private modelService: ModelService) {}
 
@@ -30,7 +30,7 @@ export class ModelComponent implements OnInit {
         next: (data) => {
           this.models = data;
           if (this.models.length > 0) {
-            this.selectedModelId = this.models[0].id;
+            this.selectedModelName = this.models[0].name;
           }
         },
         error: (err) => {

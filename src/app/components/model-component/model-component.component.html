@@ -2,8 +2,8 @@
   <h2>Models</h2>
   <mat-form-field appearance="fill">
     <mat-label>Select a Model</mat-label>
-    <mat-select [(ngModel)]="selectedModelId">
-      <mat-option *ngFor="let model of models" [value]="model.id">
+    <mat-select [(ngModel)]="selectedModelName">
+      <mat-option *ngFor="let model of models" [value]="model.name">
         {{ model.name }}
       </mat-option>
     </mat-select>

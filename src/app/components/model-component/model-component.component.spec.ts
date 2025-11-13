@@ -10,8 +10,8 @@ import { Model, ModelService } from '../../services/model.service';
 class MockModelService {
   getModels(token: string) {
     const dummyModels: Model[] = [
-      { id: 1, name: 'Llama3' },
-      { id: 2, name: 'Gemma' },
+      { name: 'Llama3' },
+      { name: 'Gemma' },
     ];
     return of(dummyModels);
   }
@@ -55,7 +55,7 @@ describe('ModelComponent', () => {
       expect(getModelsSpy).toHaveBeenCalledWith('test-token');
       expect(component.models.length).toBe(2);
       expect(component.models[0].name).toBe('Llama3');
-      expect(component.selectedModelId).toBe(1); // Should select the first model by default
+      expect(component.selectedModelName).toBe('Llama3'); // Should select the first model's name by default
     }));
 
     it('should not call getModels if no token is present', () => {
@@ -87,7 +87,7 @@ describe('ModelComponent', () => {
         tick();
 
         expect(component.models.length).toBe(0);
-        expect(component.selectedModelId).toBeNull();
+        expect(component.selectedModelName).toBeNull();
     }));
   });
 });
