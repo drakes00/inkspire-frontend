@@ -19,7 +19,7 @@ export class ModelService {
    * @returns An Observable containing the array of models.
    */
   getModels(token: string): Observable<Model[]> {
-    const url = '/api/models';
+    const url = '/api/ollama/models';
     const headers = new HttpHeaders({
       Authorization: `Bearer ${token}`,
       Accept: 'application/json',

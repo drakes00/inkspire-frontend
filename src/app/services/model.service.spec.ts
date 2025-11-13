@@ -36,7 +36,7 @@ describe('ModelService', () => {
         expect(models).toEqual(dummyModels);
       });
 
-      const req = httpMock.expectOne('/api/models');
+      const req = httpMock.expectOne('/api/ollama/models');
       expect(req.request.method).toBe('GET');
       expect(req.request.headers.get('Authorization')).toBe(`Bearer ${token}`);
       req.flush(dummyModels);
@@ -52,7 +52,7 @@ describe('ModelService', () => {
             },
         });
 
-        const req = httpMock.expectOne('/api/models');
+        const req = httpMock.expectOne('/api/ollama/models');
         req.flush('Unauthorized', {
             status: 401,
             statusText: 'Unauthorized',
