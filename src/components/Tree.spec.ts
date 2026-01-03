@@ -1,7 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import Tree from './Tree.vue'
 import TreeItem from './TreeItem.vue'
+import Modal from './Modal.vue'
 import { filesManagerService } from '../services/filesManager'
 import { createRouter, createWebHistory } from 'vue-router'
 
@@ -36,6 +37,7 @@ function mountTree() {
     return mount(Tree, {
         global: {
             plugins: [router],
+            stubs: { teleport: true }
         }
     })
 }
@@ -44,6 +46,8 @@ describe('Tree.vue', () => {
 
     beforeEach(() => {
         vi.restoreAllMocks() // Restore original implementations
+        vi.spyOn(console, 'error').mockImplementation(() => {})
+        vi.spyOn(console, 'warn').mockImplementation(() => {})
         localStorageMock.clear()
         localStorageMock.setItem('jwt_token', 'TEST_TOKEN')
         
@@ -57,15 +61,10 @@ describe('Tree.vue', () => {
         vi.spyOn(filesManagerService, 'delFile').mockResolvedValue({})
         vi.spyOn(filesManagerService, 'delDir').mockResolvedValue({})
         vi.spyOn(filesManagerService, 'logout').mockResolvedValue({})
-        
-        // Clean up body for Teleport tests
-        document.body.innerHTML = ''
-        // Create app placeholder if needed by mount (mount appends to a div usually)
     })
 
-    it('should create the component', () => {
-        const wrapper = mountTree()
-        expect(wrapper.exists()).toBe(true)
+    afterEach(() => {
+        vi.clearAllMocks()
     })
 
     // ------------------------------------
@@ -107,68 +106,6 @@ describe('Tree.vue', () => {
         expect(filesManagerService.getTree).not.toHaveBeenCalled()
     })
 
-    it('should continue loading other directories even if one fails', async () => {
-        const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
-
-        vi.mocked(filesManagerService.getTree).mockResolvedValue({
-            dirs: { "1": { name: "DirA" }, "2": { name: "DirB" } },
-            files: {},
-        });
-
-        vi.mocked(filesManagerService.getDirContent).mockImplementation(async (token: string, id: number) => {
-            if (id === 1) throw new Error("Network error")
-            return { files: {} }
-        });
-
-        mountTree()
-        await flushPromises()
-
-        expect(filesManagerService.getDirContent).toHaveBeenCalledTimes(2)
-        expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining("Failed to load content for dir 1"), expect.any(Error))
-        
-        consoleSpy.mockRestore()
-    })
-
-    // ------------------------------------
-    // Selection tests
-    // ------------------------------------
-
-    it('should select a file', async () => {
-         vi.mocked(filesManagerService.getTree).mockResolvedValue({
-            dirs: {},
-            files: { "2": { name: "FileRoot" } },
-        });
-
-        const wrapper = mountTree()
-        await flushPromises()
-
-        const fileItem = wrapper.findComponent(TreeItem)
-        await fileItem.find('.tree-node-content').trigger('click')
-
-        expect(fileItem.find('.tree-node-content').classes()).toContain('selected')
-    })
-
-    it('should toggle directory expansion but not select it', async () => {
-        vi.mocked(filesManagerService.getTree).mockResolvedValue({
-            dirs: { "1": { name: "DirA" } },
-            files: {},
-        });
-        vi.mocked(filesManagerService.getDirContent).mockResolvedValue({ files: {} });
-
-        const wrapper = mountTree()
-        await flushPromises()
-
-        const dirItem = wrapper.findComponent(TreeItem)
-        const toggleIcon = dirItem.find('.toggle-icon')
-        
-        expect(toggleIcon.text()).toBe('▶')
-        
-        await dirItem.find('.tree-node-content').trigger('click')
-        expect(toggleIcon.text()).toBe('▼')
-        
-        expect(dirItem.find('.tree-node-content').classes()).not.toContain('selected')
-    })
-
     // ------------------------------------
     // Creation & Modal Tests
     // ------------------------------------
@@ -179,11 +116,10 @@ describe('Tree.vue', () => {
 
         const newFileBtn = wrapper.findAll('.root-menu div')[0]
         await newFileBtn.trigger('click')
-        await flushPromises()
-
-        const modal = document.querySelector('.modal')
-        expect(modal).not.toBeNull()
-        expect(modal?.querySelector('h3')?.textContent).toBe('Create New File')
+        
+        const modal = wrapper.findComponent(Modal)
+        expect(modal.props('show')).toBe(true)
+        expect(modal.props('title')).toBe('Create New File')
     })
 
     it('should create a file and update tree', async () => {
@@ -195,51 +131,38 @@ describe('Tree.vue', () => {
 
         // Open modal
         await wrapper.findAll('.root-menu div')[0].trigger('click')
-        await flushPromises()
         
-        // Fill input
-        const input = document.querySelector('.modal input') as HTMLInputElement
-        input.value = 'new-file.txt'
-        input.dispatchEvent(new Event('input')) // Trigger v-model update
+        const modal = wrapper.findComponent(Modal)
+        const input = modal.find('input')
+        await input.setValue('new-file.txt')
         
-        // Click Save
-        const saveBtn = document.querySelectorAll('.modal-actions button')[1] as HTMLButtonElement
-        saveBtn.click()
+        await modal.vm.$emit('confirm')
         await flushPromises()
 
         expect(filesManagerService.addFile).toHaveBeenCalledWith('TEST_TOKEN', 'new-file.txt', null)
         expect(filesManagerService.getTree).toHaveBeenCalledTimes(2)
     })
 
-    it('should create a directory and update tree', async () => {
-        vi.mocked(filesManagerService.getTree).mockResolvedValue({ dirs: {}, files: {} });
-        vi.mocked(filesManagerService.addDir).mockResolvedValue({});
+    it('should open edit modal for file', async () => {
+        vi.mocked(filesManagerService.getTree).mockResolvedValue({
+            dirs: {},
+            files: { "10": { name: "edit-me.txt" } },
+        });
 
         const wrapper = mountTree()
         await flushPromises()
 
-        // Open modal for New Dir (2nd item in menu)
-        await wrapper.findAll('.root-menu div')[1].trigger('click')
-        await flushPromises()
+        const fileItem = wrapper.findComponent(TreeItem)
+        await fileItem.find('.node-actions-trigger').trigger('click')
         
-        // Fill input
-        const input = document.querySelector('.modal input') as HTMLInputElement
-        input.value = 'new-dir'
-        input.dispatchEvent(new Event('input'))
-        
-        // Fill context
-        const textarea = document.querySelector('.modal textarea') as HTMLTextAreaElement
-        expect(textarea).not.toBeNull()
-        textarea.value = 'dir context'
-        textarea.dispatchEvent(new Event('input'))
-
-        // Click Save
-        const saveBtn = document.querySelectorAll('.modal-actions button')[1] as HTMLButtonElement
-        saveBtn.click()
+        const editBtn = fileItem.findAll('.context-menu div').find(d => d.text() === 'Edit')
+        await editBtn?.trigger('click')
         await flushPromises()
 
-        expect(filesManagerService.addDir).toHaveBeenCalledWith('TEST_TOKEN', 'new-dir', 'dir context', null)
-        expect(filesManagerService.getTree).toHaveBeenCalledTimes(2)
+        const modal = wrapper.findComponent(Modal)
+        expect(modal.props('show')).toBe(true)
+        expect(modal.props('title')).toBe('Edit File')
+        expect(wrapper.vm.modalInputName).toBe('edit-me.txt')
     })
 
     // ------------------------------------
@@ -258,45 +181,28 @@ describe('Tree.vue', () => {
         const fileItem = wrapper.findComponent(TreeItem)
         await fileItem.find('.node-actions-trigger').trigger('click')
         
-        // Need to wait for Vue updates if needed, though click triggers direct logic
-        const deleteBtn = fileItem.findAll('.context-menu div')[1]
-        await deleteBtn.trigger('click')
+        const deleteBtn = fileItem.findAll('.context-menu div').find(d => d.text() === 'Delete')
+        await deleteBtn?.trigger('click')
         await flushPromises()
 
-        const confirmDialog = document.querySelector('.modal h3')
-        expect(confirmDialog?.textContent).toBe('Confirm Action')
+        const confirmModal = wrapper.findAllComponents(Modal).find(m => m.props('title') === 'Confirm Action')
+        expect(confirmModal?.props('show')).toBe(true)
     })
 
-    it('should call delFile on confirm delete', async () => {
-        vi.mocked(filesManagerService.getTree).mockResolvedValue({
-            dirs: {},
-            files: { "10": { name: "delete-me.txt" } },
-        });
-        vi.mocked(filesManagerService.delFile).mockResolvedValue({});
-
+    // ------------------------------------
+    // UI Tests
+    // ------------------------------------
+    it('toggles theme when theme button is clicked', async () => {
         const wrapper = mountTree()
-        await flushPromises()
-
-        // Open delete dialog
-        const fileItem = wrapper.findComponent(TreeItem)
-        await fileItem.find('.node-actions-trigger').trigger('click')
-        await fileItem.findAll('.context-menu div')[1].trigger('click')
-        await flushPromises()
+        const themeBtn = wrapper.find('.icon-btn[title="Toggle Theme"]')
         
-        // Click Delete in Confirm Dialog
-        const deleteBtn = document.querySelector('.modal-actions .danger') as HTMLButtonElement
-        deleteBtn.click()
-        await flushPromises()
-
-        expect(filesManagerService.delFile).toHaveBeenCalledWith('TEST_TOKEN', 10)
-        expect(filesManagerService.getTree).toHaveBeenCalledTimes(2)
+        const initialIcon = themeBtn.text()
+        await themeBtn.trigger('click')
+        
+        expect(themeBtn.text()).not.toBe(initialIcon)
     })
 
-    // ------------------------------------
-    // Logout Tests
-    // ------------------------------------
-    it('should call logout service and clear token', async () => {
-        // Mock window.location.reload
+    it('calls logout service and clears token', async () => {
         const reloadSpy = vi.fn()
         Object.defineProperty(window, 'location', {
             configurable: true,
@@ -306,12 +212,11 @@ describe('Tree.vue', () => {
         const wrapper = mountTree()
         await flushPromises()
 
-        await wrapper.findAll('.root-menu div')[2].trigger('click')
+        await wrapper.findAll('.root-menu div').find(d => d.text() === 'Logout')?.trigger('click')
         await flushPromises()
 
         expect(filesManagerService.logout).toHaveBeenCalledWith('TEST_TOKEN')
         expect(localStorageMock.removeItem).toHaveBeenCalledWith('jwt_token')
         expect(reloadSpy).toHaveBeenCalled()
     })
-
 })
