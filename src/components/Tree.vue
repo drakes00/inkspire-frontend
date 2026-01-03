@@ -2,6 +2,7 @@
 import { ref, onMounted, provide, readonly } from 'vue'
 import { useRouter } from 'vue-router'
 import TreeItem from './TreeItem.vue'
+import Modal from './Modal.vue'
 import { filesManagerService, type FileSystemNode } from '../services/filesManager'
 import { useTheme } from '../services/theme'
 
@@ -158,12 +159,12 @@ const handleNodeAction = (action: string, node: FileSystemNode | null, parentId:
  * @param targetId The ID of the target directory (for creation) or node (for edit).
  * @param node The node object if editing.
  */
-const openModal = (type: 'create-file' | 'create-dir' | 'edit', targetId: number | null, node: FileSystemNode | null = null) => {
+const openModal = async (type: 'create-file' | 'create-dir' | 'edit', targetId: number | null, node: FileSystemNode | null = null) => {
     modalType.value = type
     targetNodeId.value = targetId
     nodeToEdit.value = node
     modalInputName.value = node ? node.name : ''
-    modalInputContext.value = '' // Fetch context if edit dir?
+    modalInputContext.value = ''
     
     if (type === 'create-file') {
         modalTitle.value = 'Create New File'
@@ -174,8 +175,17 @@ const openModal = (type: 'create-file' | 'create-dir' | 'edit', targetId: number
     } else if (type === 'edit') {
         modalTitle.value = node?.type === 'D' ? 'Edit Directory' : 'Edit File'
         modalContextVisible.value = node?.type === 'D'
-        // If editing dir, we technically might want to fetch current context/summary 
-        // but skipping for now or assumed empty/available.
+        if (node?.type === 'D') {
+            const token = localStorage.getItem('jwt_token')
+            if (token) {
+                try {
+                    const content = await filesManagerService.getDirContent(token, node.id)
+                    modalInputContext.value = content.summary || ''
+                } catch (e) {
+                    console.error('Failed to fetch directory details for edit', e)
+                }
+            }
+        }
     }
     
     showModal.value = true
@@ -286,35 +296,34 @@ onMounted(() => {
       />
     </ul>
 
-    <!-- 'Teleport' moves the modal HTML to the <body> tag to avoid CSS nesting issues 
-         (like 'z-index' or 'overflow: hidden' on parent containers). -->
-    <Teleport to="body">
-        <!-- Overlay for Modal Dialogs -->
-        <div v-if="showModal" class="modal-overlay">
-            <div class="modal">
-                <h3>{{ modalTitle }}</h3>
-                <!-- 'v-model' creates a two-way binding between the input and our reactive state -->
-                <input v-model="modalInputName" placeholder="Name" />
-                <textarea v-if="modalContextVisible" v-model="modalInputContext" placeholder="Context/Summary"></textarea>
-                <div class="modal-actions">
-                    <button @click="showModal = false">Cancel</button>
-                    <button @click="submitModal">Save</button>
-                </div>
-            </div>
-        </div>
+    <!-- Unified Modal for Forms -->
+    <Modal 
+      :show="showModal"
+      :title="modalTitle"
+      @close="showModal = false"
+      @confirm="submitModal"
+    >
+      <div class="form-group">
+        <label>Name:</label>
+        <input v-model="modalInputName" placeholder="Enter name" @keyup.enter="submitModal" />
+      </div>
+      <div v-if="modalContextVisible" class="form-group">
+        <label>Context/Summary:</label>
+        <textarea v-model="modalInputContext" placeholder="Enter context" rows="3"></textarea>
+      </div>
+    </Modal>
 
-        <!-- Confirmation Dialog Overlay -->
-        <div v-if="showConfirm" class="modal-overlay">
-            <div class="modal">
-                <h3>Confirm Action</h3>
-                <p>{{ confirmMessage }}</p>
-                <div class="modal-actions">
-                    <button @click="showConfirm = false">Cancel</button>
-                    <button @click="confirmDelete" class="danger">Delete</button>
-                </div>
-            </div>
-        </div>
-    </Teleport>
+    <!-- Unified Modal for Confirmation -->
+    <Modal 
+      :show="showConfirm"
+      title="Confirm Action"
+      confirm-text="Delete"
+      :is-danger="true"
+      @close="showConfirm = false"
+      @confirm="confirmDelete"
+    >
+      <p>{{ confirmMessage }}</p>
+    </Modal>
   </div>
 </template>
 
@@ -394,50 +403,5 @@ onMounted(() => {
   overflow-y: auto;
   padding: 0;
   margin: 0;
-}
-
-/* Modal Styles */
-.modal-overlay {
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0,0,0,0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-}
-
-.modal {
-    background: var(--color-background);
-    padding: 20px;
-    border-radius: 8px;
-    width: 300px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.modal input, .modal textarea {
-    padding: 8px;
-    border: 1px solid var(--color-border);
-    border-radius: 4px;
-}
-
-.modal-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-}
-
-.modal-actions button {
-    padding: 6px 12px;
-    cursor: pointer;
-}
-
-.danger {
-    background-color: var(--color-danger);
-    color: white;
-    border: none;
-    border-radius: 4px;
 }
 </style>
