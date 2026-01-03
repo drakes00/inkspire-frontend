@@ -3,6 +3,7 @@ import { ref, onMounted, provide, readonly } from 'vue'
 import { useRouter } from 'vue-router'
 import TreeItem from './TreeItem.vue'
 import Modal from './Modal.vue'
+import ModelSelector from './ModelSelector.vue'
 import { filesManagerService, type FileSystemNode } from '../services/filesManager'
 import { useTheme } from '../services/theme'
 import { useSharedFiles } from '../services/sharedFiles'
@@ -331,6 +332,8 @@ onMounted(() => {
     >
       <p>{{ confirmMessage }}</p>
     </Modal>
+
+    <ModelSelector />
   </div>
 </template>
 
