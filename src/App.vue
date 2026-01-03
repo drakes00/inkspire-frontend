@@ -27,7 +27,7 @@ const handleLoginSuccess = (token: string) => {
     <main>
       <!-- Main Content Area Placeholder -->
       <div class="content-placeholder">
-        <h1>Welcome to Inkspire</h1>
+        <h1>Welcome to InkSpire</h1>
         <p>Select a file from the tree to view its content.</p>
       </div>
     </main>
