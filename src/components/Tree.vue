@@ -3,8 +3,10 @@ import { ref, onMounted, provide, readonly } from 'vue'
 import { useRouter } from 'vue-router'
 import TreeItem from './TreeItem.vue'
 import { filesManagerService, type FileSystemNode } from '../services/filesManager'
+import { useTheme } from '../services/theme'
 
 const router = useRouter()
+const { toggleTheme, isDarkMode } = useTheme()
 
 // Reactive state variables. Vue's 'ref' makes these variables reactive, 
 // meaning the UI will automatically update when their values change.
@@ -257,8 +259,9 @@ onMounted(() => {
     <div class="title-bar">
       <span>INKSPIRE</span>
       <div class="actions">
-        <!-- Theme Toggle Placeholder -->
-        <button class="icon-btn">🌓</button> 
+        <button class="icon-btn" @click="toggleTheme" title="Toggle Theme">
+          {{ isDarkMode() ? '☀️' : '🌙' }}
+        </button> 
         <!-- Root Menu -->
         <div class="root-menu-trigger">
             <button class="icon-btn">⋮</button>
