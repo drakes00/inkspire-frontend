@@ -52,7 +52,8 @@ describe('Modal.vue', () => {
       }
     })
     const cancelButton = wrapper.findAll('button')[0]
-    await cancelButton.trigger('click')
+    expect(cancelButton).toBeDefined()
+    await cancelButton?.trigger('click')
     expect(wrapper.emitted()).toHaveProperty('close')
   })
 
@@ -64,7 +65,8 @@ describe('Modal.vue', () => {
       }
     })
     const confirmButton = wrapper.findAll('button')[1]
-    await confirmButton.trigger('click')
+    expect(confirmButton).toBeDefined()
+    await confirmButton?.trigger('click')
     expect(wrapper.emitted()).toHaveProperty('confirm')
   })
 
@@ -88,7 +90,8 @@ describe('Modal.vue', () => {
       }
     })
     const confirmButton = wrapper.findAll('button')[1]
-    expect(confirmButton.classes()).toContain('danger')
+    expect(confirmButton).toBeDefined()
+    expect(confirmButton?.classes()).toContain('danger')
   })
 
   it('disables buttons when loading is true', () => {
@@ -99,8 +102,10 @@ describe('Modal.vue', () => {
       }
     })
     const buttons = wrapper.findAll('button')
-    expect(buttons[0].element.disabled).toBe(true)
-    expect(buttons[1].element.disabled).toBe(true)
-    expect(buttons[1].text()).toBe('...')
+    expect(buttons[0]).toBeDefined()
+    expect(buttons[1]).toBeDefined()
+    expect((buttons[0]?.element as HTMLButtonElement).disabled).toBe(true)
+    expect((buttons[1]?.element as HTMLButtonElement).disabled).toBe(true)
+    expect(buttons[1]?.text()).toBe('...')
   })
 })

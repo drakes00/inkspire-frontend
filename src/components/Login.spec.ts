@@ -3,10 +3,10 @@ import { mount } from '@vue/test-utils'
 import Login from './Login.vue'
 
 describe('Login.vue', () => {
-  let fetchSpy = vi.spyOn(global, 'fetch')
+  let fetchSpy = vi.spyOn(window, 'fetch')
 
   beforeEach(() => {
-    fetchSpy = vi.spyOn(global, 'fetch')
+    fetchSpy = vi.spyOn(window, 'fetch')
     vi.spyOn(console, 'error').mockImplementation(() => {})
   })
 

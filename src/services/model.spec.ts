@@ -4,10 +4,10 @@ import { modelService } from './model'
 const API_URL = 'http://localhost:8000/api'
 
 describe('modelService', () => {
-  let fetchSpy = vi.spyOn(global, 'fetch')
+  let fetchSpy = vi.spyOn(window, 'fetch')
 
   beforeEach(() => {
-    fetchSpy = vi.spyOn(global, 'fetch')
+    fetchSpy = vi.spyOn(window, 'fetch')
     vi.spyOn(console, 'error').mockImplementation(() => {})
   })
 

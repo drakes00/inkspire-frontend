@@ -8,7 +8,7 @@ const API_URL = 'http://localhost:8000/api'
 
 describe('filesManagerService', () => {
     // Mock global fetch
-    const fetchSpy = vi.spyOn(global, 'fetch')
+    const fetchSpy = vi.spyOn(window, 'fetch')
 
     beforeEach(() => {
         fetchSpy.mockReset()

@@ -4,10 +4,10 @@ import { ollamaService } from './ollama'
 const API_URL = 'http://localhost:8000/api'
 
 describe('ollamaService', () => {
-  let fetchSpy = vi.spyOn(global, 'fetch')
+  let fetchSpy = vi.spyOn(window, 'fetch')
 
   beforeEach(() => {
-    fetchSpy = vi.spyOn(global, 'fetch')
+    fetchSpy = vi.spyOn(window, 'fetch')
     vi.spyOn(console, 'error').mockImplementation(() => {})
   })
 

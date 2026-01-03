@@ -34,8 +34,8 @@ describe('ModelSelector.vue', () => {
 
     const options = wrapper.findAll('option')
     expect(options).toHaveLength(2)
-    expect(options[0].text()).toBe('Llama3')
-    expect(options[1].text()).toBe('Gemma')
+    expect(options[0]?.text()).toBe('Llama3')
+    expect(options[1]?.text()).toBe('Gemma')
     
     const vm = wrapper.vm as any
     expect(vm.selectedModelName).toBe('Llama3')

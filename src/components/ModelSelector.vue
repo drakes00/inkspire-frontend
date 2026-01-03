@@ -13,7 +13,7 @@ const fetchModels = async () => {
   try {
     const data = await modelService.getModels(token)
     models.value = data
-    if (models.value.length > 0) {
+    if (models.value.length > 0 && models.value[0]) {
       selectedModelName.value = models.value[0].name
     }
   } catch (e: any) {

@@ -60,7 +60,7 @@ describe('Tree.vue', () => {
         vi.spyOn(filesManagerService, 'editDir').mockResolvedValue({})
         vi.spyOn(filesManagerService, 'delFile').mockResolvedValue({})
         vi.spyOn(filesManagerService, 'delDir').mockResolvedValue({})
-        vi.spyOn(filesManagerService, 'logout').mockResolvedValue({})
+        vi.spyOn(filesManagerService, 'logout').mockResolvedValue(undefined)
     })
 
     afterEach(() => {
@@ -91,7 +91,7 @@ describe('Tree.vue', () => {
         const dirA = treeItems.find(item => item.props('node').name === 'DirA')
         expect(dirA).toBeDefined()
         expect(dirA?.props('node').type).toBe('D')
-        expect(dirA?.props('node').children[0].name).toBe('NestedFileA')
+        expect(dirA?.props('node').children?.[0]?.name).toBe('NestedFileA')
 
         const fileRoot = treeItems.find(item => item.props('node').name === 'FileRoot')
         expect(fileRoot).toBeDefined()
@@ -115,7 +115,8 @@ describe('Tree.vue', () => {
         await flushPromises()
 
         const newFileBtn = wrapper.findAll('.root-menu div')[0]
-        await newFileBtn.trigger('click')
+        expect(newFileBtn).toBeDefined()
+        await newFileBtn?.trigger('click')
         
         const modal = wrapper.findComponent(Modal)
         expect(modal.props('show')).toBe(true)
@@ -130,7 +131,9 @@ describe('Tree.vue', () => {
         await flushPromises()
 
         // Open modal
-        await wrapper.findAll('.root-menu div')[0].trigger('click')
+        const newFileBtn = wrapper.findAll('.root-menu div')[0]
+        expect(newFileBtn).toBeDefined()
+        await newFileBtn?.trigger('click')
         
         const modal = wrapper.findComponent(Modal)
         const input = modal.find('input')
@@ -162,7 +165,7 @@ describe('Tree.vue', () => {
         const modal = wrapper.findComponent(Modal)
         expect(modal.props('show')).toBe(true)
         expect(modal.props('title')).toBe('Edit File')
-        expect(wrapper.vm.modalInputName).toBe('edit-me.txt')
+        expect((wrapper.vm as any).modalInputName).toBe('edit-me.txt')
     })
 
     // ------------------------------------

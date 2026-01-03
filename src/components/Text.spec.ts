@@ -111,7 +111,7 @@ describe('Text.vue', () => {
 
     expect(ollamaService.addButtonOllama).toHaveBeenCalled()
     expect(wrapper.find('.validation-container').exists()).toBe(true)
-    expect(wrapper.find('.validation-container textarea').element.value).toBe('AI generated text')
+    expect((wrapper.find('.validation-container textarea').element as HTMLTextAreaElement).value).toBe('AI generated text')
   })
 
   it('applies generated text to editor', async () => {
