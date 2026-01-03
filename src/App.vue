@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import Login from './components/Login.vue'
 import Tree from './components/Tree.vue'
+import Text from './components/Text.vue'
 
 const isAuthenticated = ref(false)
 
@@ -25,11 +26,7 @@ const handleLoginSuccess = (token: string) => {
     </aside>
 
     <main>
-      <!-- Main Content Area Placeholder -->
-      <div class="content-placeholder">
-        <h1>Welcome to InkSpire</h1>
-        <p>Select a file from the tree to view its content.</p>
-      </div>
+      <Text />
     </main>
   </div>
   <Login v-else @login-success="handleLoginSuccess" />

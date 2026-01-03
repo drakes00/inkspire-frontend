@@ -5,9 +5,11 @@ import TreeItem from './TreeItem.vue'
 import Modal from './Modal.vue'
 import { filesManagerService, type FileSystemNode } from '../services/filesManager'
 import { useTheme } from '../services/theme'
+import { useSharedFiles } from '../services/sharedFiles'
 
 const router = useRouter()
 const { toggleTheme, isDarkMode } = useTheme()
+const { setSelectedFile } = useSharedFiles()
 
 // Reactive state variables. Vue's 'ref' makes these variables reactive, 
 // meaning the UI will automatically update when their values change.
@@ -118,7 +120,7 @@ const fetchTree = async () => {
  */
 const handleSelect = (node: FileSystemNode) => {
   selectedNodeId.value = node.id
-  // Propagate to shared service if it existed
+  setSelectedFile(node.id)
 }
 
 /**
@@ -230,6 +232,10 @@ const confirmDelete = async () => {
         if (nodeToDelete.value.type === 'D') {
             await filesManagerService.delDir(token, nodeToDelete.value.id)
         } else {
+            if (selectedNodeId.value === nodeToDelete.value.id) {
+                setSelectedFile(null)
+                selectedNodeId.value = null
+            }
             await filesManagerService.delFile(token, nodeToDelete.value.id)
         }
         showConfirm.value = false
@@ -248,6 +254,7 @@ const logout = async () => {
     if (token) {
         await filesManagerService.logout(token)
         localStorage.removeItem('jwt_token')
+        setSelectedFile(null)
         // In App.vue we listen to storage or prop, but here we can just reload or emit
         // Since we are inside the component, we can use window.location.reload() to trigger App.vue check
         // Or better, use router or emit event up.

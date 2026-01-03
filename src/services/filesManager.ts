@@ -104,5 +104,32 @@ export const filesManagerService = {
     } catch (e) {
       console.warn('Server logout failed', e);
     }
+  },
+
+  async getFileInfo(token: string, id: number) {
+    const response = await fetch(`${API_URL}/file/${id}`, {
+      headers: this.getHeaders(token),
+    });
+    if (!response.ok) throw new Error('Failed to fetch file info');
+    return response.json();
+  },
+
+  async getFileContent(token: string, id: number) {
+    const response = await fetch(`${API_URL}/file/${id}/contents`, {
+      headers: { ...this.getHeaders(token), 'Accept': 'text/plain' },
+    });
+    if (!response.ok) throw new Error('Failed to fetch file content');
+    return response.text();
+  },
+
+  async updateFileContent(token: string, id: number, content: string) {
+    const response = await fetch(`${API_URL}/file/${id}/contents`, {
+      method: 'POST',
+      headers: { ...this.getHeaders(token), 'Content-Type': 'text/plain' },
+      body: content,
+    });
+    if (!response.ok) throw new Error('Failed to update file content');
+    if (response.status === 204) return null;
+    return response.text();
   }
 };

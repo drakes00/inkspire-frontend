@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, inject, type Ref } from 'vue'
 import type { FileSystemNode } from '../services/filesManager'
+import { useSharedFiles } from '../services/sharedFiles'
 // Explicitly import TreeItem for recursion, though often handled by filename
 import TreeItem from './TreeItem.vue'
 
@@ -10,6 +11,8 @@ const props = defineProps<{
   level: number
 }>()
 
+const { selectedFileId } = useSharedFiles()
+
 // Define types for injected context
 interface TreeContext {
   selectedNodeId: Ref<number | null>
@@ -18,7 +21,7 @@ interface TreeContext {
 }
 
 // 'inject' retrieves the state and methods provided by the ancestor 'Tree' component.
-const { selectedNodeId, onSelect, onAction } = inject<TreeContext>('treeContext')!
+const { onSelect, onAction } = inject<TreeContext>('treeContext')!
 
 const isOpen = ref(false)
 const showMenu = ref(false)
@@ -81,7 +84,7 @@ const closeMenu = () => {
   <li>
     <div
       class="tree-node-content"
-      :class="{ 'selected': node.id === selectedNodeId && !isFolder }"
+      :class="{ 'selected': node.id === selectedFileId && !isFolder }"
       :style="{ paddingLeft: (level * 24 + 16) + 'px' }"
       @click="select"
     >
