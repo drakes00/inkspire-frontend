@@ -315,6 +315,83 @@ describe('filesManagerService', () => {
         })
     })
 
-    // Missing tests for getFileInfo, getFileContent, updateFileContent
-    // because they are not present in the Vue service.
+    describe('getFileInfo', () => {
+        it('should send GET request with correct URL and headers', async () => {
+            const fileId = 1
+            const token = 'test-token'
+            const mockResponse = { id: 1, name: "test.txt" }
+
+            fetchSpy.mockResolvedValueOnce({
+                ok: true,
+                json: async () => mockResponse,
+            } as Response)
+
+            const response = await filesManagerService.getFileInfo(token, fileId)
+            expect(response).toEqual(mockResponse)
+            expect(fetchSpy).toHaveBeenCalledWith(`${API_URL}/file/${fileId}`, {
+                headers: expect.objectContaining({
+                    'Authorization': `Bearer ${token}`
+                })
+            })
+        })
+    })
+
+    describe('getFileContent', () => {
+        it('should send GET request and return text content', async () => {
+            const fileId = 123
+            const token = 'test-token'
+            const mockContent = 'File content here'
+
+            fetchSpy.mockResolvedValueOnce({
+                ok: true,
+                text: async () => mockContent,
+            } as Response)
+
+            const response = await filesManagerService.getFileContent(token, fileId)
+            expect(response).toBe(mockContent)
+            expect(fetchSpy).toHaveBeenCalledWith(`${API_URL}/file/${fileId}/contents`, {
+                headers: expect.objectContaining({
+                    'Accept': 'text/plain',
+                    'Authorization': `Bearer ${token}`
+                })
+            })
+        })
+    })
+
+    describe('updateFileContent', () => {
+        it('should send POST request with text body', async () => {
+            const fileId = 1
+            const token = 'test-token'
+            const content = 'new content'
+
+            fetchSpy.mockResolvedValueOnce({
+                ok: true,
+                status: 200,
+                text: async () => 'Success',
+            } as Response)
+
+            const response = await filesManagerService.updateFileContent(token, fileId, content)
+            expect(response).toBe('Success')
+            expect(fetchSpy).toHaveBeenCalledWith(`${API_URL}/file/${fileId}/contents`, {
+                method: 'POST',
+                headers: expect.objectContaining({
+                    'Content-Type': 'text/plain',
+                    'Authorization': `Bearer ${token}`
+                }),
+                body: content
+            })
+        })
+    })
+
+    describe('logout', () => {
+        it('should call server-side logout', async () => {
+            const token = 'test-token'
+            fetchSpy.mockResolvedValueOnce({ ok: true } as Response)
+
+            await filesManagerService.logout(token)
+            
+            // logout strips /api from API_URL => http://localhost:8000/logout
+            expect(fetchSpy).toHaveBeenCalledWith('http://localhost:8000/logout', expect.anything())
+        })
+    })
 })
